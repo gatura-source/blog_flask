@@ -63,11 +63,11 @@ def login():
         the_user = Blog_User.query.filter_by(email=email).first()
         # wrong email:
         if not the_user:
-            flash("This email does not exist in our database.")
+            flash("Wrong Password or Email")
             return redirect(url_for("account.login"))
         # wrong password:
-        elif not check_password_hash(the_user.password, password):
-            flash("Incorrect password, please try again.")
+        elif not the_user.verify_password(password):
+            flash("Wrong Password or Email")
             return redirect(url_for("account.login"))
         # user is blocked:
         elif the_user.blocked == "TRUE":

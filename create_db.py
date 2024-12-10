@@ -321,3 +321,9 @@ def create_contact_db():
             name="test", email="test", message="test")
         db.session.add(new_contact)
         db.session.commit()
+
+if __name__ == '__main__':
+    create_admin_acct()
+    create_dummie_accts()
+    create_posts()
+    create_comments()

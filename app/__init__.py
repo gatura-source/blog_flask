@@ -1,16 +1,34 @@
 from flask import Flask
-import app.extensions as extensions
+from .extensions import db, migrate, login_manager, ckeditor
 from app.config import Config
 import os
+import logging
+from logging.handlers import RotatingFileHandler
+from .models import Blog_User, Blog_Posts, Blog_Contact, Blog_Stats, Blog_Theme
+
+
+def register_shell_context(app):
+    """Register shell contx objects
+    Keyword arguments:
+    app -- app instance
+    Return: None
+    """
+    def shell_context():
+        return {"db": db,
+                "User": Blog_User,
+                "Post": Blog_Posts,
+                "Contact": Blog_Contact,
+                "Stat": Blog_Stats,
+                "Theme": Blog_Theme}
+    app.shell_context_processor(shell_context)
 
 def create_app(config_class=Config):
     app = Flask(__name__)
-    app.config.from_object(config_class)
-
-    # db = SQLAlchemy(app)
-    extensions.db.init_app(app)
-    extensions.ckeditor.init_app(app)
-    extensions.login_manager.init_app(app)
+    app.config.from_object(config_class) 
+    db.init_app(app)
+    migrate.init_app(app=app, db=db)
+    ckeditor.init_app(app)
+    login_manager.init_app(app)
 
     from app.account.routes import account
     from app.dashboard.routes import dashboard
@@ -39,4 +57,13 @@ def create_app(config_class=Config):
     def static_path():
         pass
 
+    register_shell_context(app)
+
+    handler = RotatingFileHandler('app.log', maxBytes=1000000, backupCount=3)
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+
+    # Add the handler to the root logger
+    logging.getLogger().addHandler(handler)
     return app
