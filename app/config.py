@@ -8,7 +8,7 @@ base_path = os.path.abspath(os.getcwd())
 class Config:
     SUPER_USER = os.getenv("SUPERUSER") 
     SECRET_KEY = "myFlaskApp4Fun"  # needed for login with wtforms
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(base_path, os.getenv("DBNAME"))}" 
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(base_path, os.getenv('DBNAME'))}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TEMPLATES_AUTO_RELOAD = True
     ABSOLUTE_PATH = os.path.dirname(__file__)

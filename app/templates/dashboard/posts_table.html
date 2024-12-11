@@ -14,8 +14,6 @@
                     <th scope="col" class="align-middle">Date to post</th>
                     <th scope="col" class="align-middle">Date submitted</th>
                     <th scope="col" class="align-middle">Author</th>
-                    <th scope="col" class="align-middle">Likes</th>
-                    <th scope="col" class="align-middle">Comments</th>
                     <th scope="col" class="align-middle">Admin Approved</th>
                     <th scope="col" class="align-middle">Action</th>
                 </tr>
@@ -29,14 +27,12 @@
                     <td class="align-middle">{{post.date_to_post.strftime('%d %b %Y')}}</td>
                     <td class="align-middle">{{post.date_submitted.strftime('%d %b %Y')}}</td>
                     <td class="align-middle">{{post.author.name}}</td>
-                    <td class="align-middle">{{post.likes|count}}</td>
-                    <td class="align-middle">{{post.comments|count}}</td>
                     <td class="align-middle">{{post.admin_approved}}</td>
                     <td class="d-flex flex-column" style="gap: 5px;">
                         <div class="d-flex" style="gap: 5px;">
                             <a href="{{url_for('dashboard.preview_post', id=post.id)}}" target="_blank" class="btn btn-sm ALL-mini-btn"
                                 style="width: 70px; background-color: #728c6996;">preview</a>
-                            {% if post.admin_approved == "FALSE" %}
+                            {% if not post.admin_approved%}
                             <a href="{{url_for('dashboard.approve_post', id=post.id)}}" class="btn btn-sm ALL-mini-btn"
                                 style="width: 70px; background-color: #728C69;">approve</a>
                             {% else %}

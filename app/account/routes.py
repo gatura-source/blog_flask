@@ -187,6 +187,7 @@ def update_own_acct_picture(id):
 # If this user is an author, the authorship of the post will be transfered to the blog team.
 @account.route("/dashboard/manage_account/delete/<int:id>", methods=["GET", "POST"])
 @login_required
+@admin_required()
 def delete_own_acct(id):
     user_at_hand = Blog_User.query.get_or_404(id)
     if request.method == "POST":
@@ -198,7 +199,7 @@ def delete_own_acct(id):
             try:
                 # if user is author, transfer the authorship of the posts to the default author
                 if user_at_hand.type == "author":
-                    change_authorship_of_all_post(user_at_hand.id, 2)
+                    change_authorship_of_all_post(Blog_User, user_at_hand.id, 2)
                 
                 # delete user's picture
                 if user_at_hand.picture == "" or user_at_hand.picture == "Picture_default.jpg":
@@ -214,12 +215,12 @@ def delete_own_acct(id):
                 db.session.delete(user_at_hand)
                 db.session.commit()
                 flash("Your account was deleted successfully.")
-                update_stats_users_active(-1)
+                update_stats_users_active(Blog_User, -1)
                 return redirect(url_for("website.home"))
             except:
                 flash("There was a problem deleting your account.")
                 db.session.rollback()
-                current_app.logger.info(f"Error deleteing user ID: {current_user.id}")
+                current_app.logger.info(f"Error deleting user ID: {current_user.id}")
                 return redirect(url_for('account.manage_acct'))
     else:
         return render_template("account/account_mgmt_delete.html",)

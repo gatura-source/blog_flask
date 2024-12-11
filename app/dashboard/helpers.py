@@ -50,3 +50,30 @@ def admin_required():
             return f(*args, **kwargs)
         return decorated_func
     return decorated
+
+def submit_post_blog_img_handle(the_post_id, img_filename, img_format):
+            accepted_img_format = ["v", "h", "s"]
+            if img_format not in accepted_img_format:
+                raise NameError(
+                    "submit_post_blog_img_handle function was supplied an invalid img_format")
+            new_img_name = check_blog_picture(
+                the_post_id, img_filename, img_format)
+            if new_img_name:
+                new_img_format = "picture_" + img_format
+                the_img = request.files[new_img_format]
+                try:
+                    if img_format == "v":
+                        delete_blog_img(post_to_edit.picture_v)
+                        post_to_edit.picture_v = new_img_name
+                    elif img_format == "h":
+                        delete_blog_img(post_to_edit.picture_h)
+                        post_to_edit.picture_h = new_img_name
+                    else:
+                        delete_blog_img(post_to_edit.picture_s)
+                        post_to_edit.picture_s = new_img_name
+                    the_img.save(os.path.join(
+                        current_app.config["BLOG_IMG_FOLDER"], new_img_name))
+                    db.session.commit()
+                    submit_post_blog_img_status[img_format] = True
+                except:
+                    submit_post_blog_img_status[img_format] = False

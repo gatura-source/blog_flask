@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, current_app
 from app.extensions import db
-from app.models import Blog_Posts, Blog_User
+from app.models import Blog_Posts, Blog_User, Blog_Theme
 from app.dashboard.forms import The_Posts
 from app.dashboard.helpers import check_blog_picture, delete_blog_img, admin_required
 from app.helpers import update_stats_users_active, update_approved_post_stats, change_authorship_of_all_post
@@ -332,14 +332,15 @@ def posts_table():
 def approve_post(id):
     post_to_approve = Blog_Posts.query.get_or_404(id)
     if request.method == "POST":
-        post_to_approve.admin_approved = "TRUE"
+        post_to_approve.admin_approved = True
         try:
             db.session.commit()
             flash("This post has been admin approved.")
-            update_approved_post_stats(1)
+            update_approved_post_stats(Blog_Posts, 1)
             return redirect(url_for('dashboard.posts_table'))
         except:
             flash("There was a problem approving this post.")
+            db.session.rollback()
             return render_template("dashboard/posts_approve_post.html", logged_in=current_user.is_authenticated, post_to_approve=post_to_approve)
     else:
         return render_template("dashboard/posts_approve_post.html", logged_in=current_user.is_authenticated, post_to_approve=post_to_approve)
@@ -352,14 +353,15 @@ def approve_post(id):
 def disallow_post(id):
     post_to_disallow = Blog_Posts.query.get_or_404(id)
     if request.method == "POST":
-        post_to_disallow.admin_approved = "FALSE"
+        post_to_disallow.admin_approved = False
         try:
             db.session.commit()
             flash("This post is no longer admin approved.")
-            update_approved_post_stats(-1)
+            update_approved_post_stats(Blog_Posts, -1)
             return redirect(url_for('dashboard.posts_table'))
         except:
             flash("There was a problem disallowing this post.")
+            db.session.rollback()
             return render_template("dashboard/posts_disallow_post.html", logged_in=current_user.is_authenticated, post_to_disallow=post_to_disallow)
     else:
         return render_template("dashboard/posts_disallow_post.html", logged_in=current_user.is_authenticated, post_to_disallow=post_to_disallow)
@@ -389,6 +391,45 @@ def preview_post(id):
 @dashboard.route("/dashboard/manage_posts/edit_post/<int:id>", methods=["GET", "POST"])
 @login_required
 def edit_post(id):
+    post_to_edit = Blog_Posts.query.get_or_404(id)
+    themes_list = [(u.id, u.theme) for u in db.session.query(Blog_Theme).all()]
+    form = The_Posts(obj=themes_list)
+    form.theme.choices = themes_list
+    if form.validate_on_submit():
+        post_to_edit.theme_id = form.theme.data
+        post_to_edit.date_to_post = form.date.data
+        post_to_edit.title = form.title.data
+        post_to_edit.intro = form.intro.data
+        post_to_edit.body = form.body.data
+        post_to_edit.picture_source = form.picture_v_source.data
+        post_to_edit.picture_alt = form.picture_alt.data
+        post_to_edit.meta_tag = form.meta_tag.data
+        post_to_edit.title_tag = form.title_tag.data
+        try:
+            if db.session.add(post_to_edit) and db.session.commit():
+                flash("Post edit success")
+                if current_user.type == "admin" or current_user.type == "super_admin":
+                    return redirect(url_for("dashboard.posts_table", logged_in=current_user.is_authenticated))
+                else:
+                    return redirect(url_for("dashboard.posts_table_author", logged_in=current_user.is_authenticated))
+        except Exception:
+            flash("Post edit Error")
+            db.session.rollback()
+            current_app.logger.error(f"ERROR while editing Post {post_to_edit.id}")
+    form.theme.data = post_to_edit.theme_id
+    form.author.data = post_to_edit.author.name
+    form.date.data = post_to_edit.date_to_post
+    form.title.data = post_to_edit.title
+    form.intro.data = post_to_edit.intro
+    form.body.data = post_to_edit.body
+    form.picture_source.data = post_to_edit.picture_source
+    form.picture_alt.data = post_to_edit.picture_alt
+    form.meta_tag.data = post_to_edit.meta_tag
+    form.title_tag.data = post_to_edit.title_tag
+    return render_template('dashboard/posts_edit_post.html', logged_in=current_user.is_authenticated, form=form, post_to_edit=post_to_edit)   
+        
+    
+        
 
     # getting post information
     post_to_edit = Blog_Posts.query.get_or_404(id)
@@ -424,32 +465,7 @@ def edit_post(id):
         submit_post_blog_img_provided = dict(v=False, h=False, s=False)
         submit_post_blog_img_status = dict(v=False, h=False, s=False)
 
-        def submit_post_blog_img_handle(img_filename, img_format):
-            accepted_img_format = ["v", "h", "s"]
-            if img_format not in accepted_img_format:
-                raise NameError(
-                    "submit_post_blog_img_handle function was supplied an invalid img_format")
-            new_img_name = check_blog_picture(
-                the_post_id, img_filename, img_format)
-            if new_img_name:
-                new_img_format = "picture_" + img_format
-                the_img = request.files[new_img_format]
-                try:
-                    if img_format == "v":
-                        delete_blog_img(post_to_edit.picture_v)
-                        post_to_edit.picture_v = new_img_name
-                    elif img_format == "h":
-                        delete_blog_img(post_to_edit.picture_h)
-                        post_to_edit.picture_h = new_img_name
-                    else:
-                        delete_blog_img(post_to_edit.picture_s)
-                        post_to_edit.picture_s = new_img_name
-                    the_img.save(os.path.join(
-                        current_app.config["BLOG_IMG_FOLDER"], new_img_name))
-                    db.session.commit()
-                    submit_post_blog_img_status[img_format] = True
-                except:
-                    submit_post_blog_img_status[img_format] = False
+        
 
         img_size_not_accepted = False
 
@@ -529,13 +545,36 @@ def edit_post(id):
 @dashboard.route("/dashboard/manage_posts_author/delete_post/<int:id>", endpoint='delete_post_author', methods=["GET", "POST"])
 @dashboard.route("/dashboard/manage_posts/delete_post/<int:id>", methods=["GET", "POST"])
 @login_required
-def delete_post(id):
-    # get post, and its associated likes and comments
-    post_to_delete = Blog_Posts.query.get_or_404(id)
-    post_likes = db.session.query(Blog_Likes).filter(
-        Blog_Likes.post_id == id).all()
-    comments = db.session.query(Blog_Comments).filter(
-        Blog_Comments.post_id == id).all()
+def delete_post(id, methods=['POST']):
+    if request.method == 'POST':
+        try:
+            post_to_delete = Blog_Posts.query.get_or_404(id)
+            post_was_approved = post_to_delete.admin_approved
+            db.session.delete(post_to_delete)
+            db.session.commit()
+            flash("Post delete success")
+            delete_blog_img(post_to_delete.picture_v)
+            delete_blog_img(post_to_delete.picture_h)
+            delete_blog_img(post_to_delete.picture_s)
+            if post_was_approved:
+                update_approved_post_stats(Blog_Posts, -1)
+            if current_user.type == "author":
+                return redirect(url_for('dashboard.posts_table_author'))
+            else:
+                return redirect(url_for('dashboard.posts_table'))
+        except Exception:
+            db.session.rollback()
+            flash("Error Deleting Post")
+            current_app.logger.info(f"Error Deleting Post {id}")
+            if current_user.type == "author":
+                return redirect(url_for('dashboard.posts_table_author'))
+            else:
+                return redirect(url_for('dashboard.posts_table'))
+    return render_template(
+        "dashboard/posts_delete_post.html", 
+        logged_in=current_user.is_authenticated, 
+        post_to_delete=Blog_Posts.query.get_or_404(id))
+
 
     if request.method == "POST":
         try:

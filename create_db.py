@@ -4,7 +4,7 @@ from app.extensions import db
 # from app.models.text import about_text_author, about_text_user  # dummie strings
 from app.dummie_data import authors, posts, themes, comments
 # from app.helpers import hash_pw
-from app.helpers import pic_src_user, pic_src_post, pic_src_theme
+from app.helpers import pic_src_user, pic_src_post, pic_src_theme, update_approved_post_stats
 from datetime import datetime
 from faker import Faker
 
@@ -127,92 +127,33 @@ POST_BODY = posts.post_body
 def create_posts():
     # Check if dummie posts exists in the database, if not, create the posts:
     posts_exist = Blog_Posts.query.get(1)
-    for i in range(12):
-        post = Blog_Posts(
-            title=fake.ti
-        )
+    if not posts_exist:
+        for i in range(12):
+            post = Blog_Posts()
+            post.title = fake.text()
+            post.title_tag = fake.text()
+            post.admin_approved = True
+            post.author_id = 0
+            post.body = fake.paragraph()
+            post.intro = fake.text()
+            post.picture_alt = fake.text()
+            post.picture_h = posts.post_data[3]["picture_h"]
+            post.picture_v = posts.post_data[3]["picture_v"]
+            post.picture_s = posts.post_data[3]["picture_s"]
+            post.picture_h_source = posts.post_data[3]["picture_h_source"]
+            post.picture_v_source = posts.post_data[3]["picture_v_source"]
+            post.picture_s_source = posts.post_data[3]["picture_h_source"]
 
-        db.session.commit()
+            db.session.add(post)
+
+            db.session.commit()
+
+            update_approved_post_stats(Blog_Posts, 1)
+        
+    print("Posts created")
 
 
-# Creating dummie comments in posts
 
-# def create_comments():
-#     comments_exist = Blog_Comments.query.get(1)
-#     if not comments_exist:
-#         comment1 = Blog_Comments(text=comments.comment_data[0]["text"], post_id=1, user_id=4)
-#         comment2 = Blog_Comments(text=comments.comment_data[1]["text"], post_id=2, user_id=4)
-#         comment3 = Blog_Comments(text=comments.comment_data[2]["text"], post_id=2, user_id=4, date_submitted=datetime.strptime("2023-02-01 00:10:00", '%Y-%m-%d %H:%M:%S'))
-#         comment4 = Blog_Comments(text=comments.comment_data[3]["text"], post_id=2, user_id=4, blocked="TRUE")
-#         comment5 = Blog_Replies(text=comments.comment_data[4]["text"], post_id=2, user_id=5, comment_id=3, date_submitted=datetime.strptime("2023-02-02 00:10:00", '%Y-%m-%d %H:%M:%S'))
-#         comment6 = Blog_Replies(text=comments.comment_data[5]["text"], post_id=2, user_id=4, comment_id=3, date_submitted=datetime.strptime("2023-02-03 00:10:00", '%Y-%m-%d %H:%M:%S'))
-#         comment7 = Blog_Replies(text=comments.comment_data[6]["text"], post_id=2, user_id=5, comment_id=3, date_submitted=datetime.strptime("2023-02-04 00:10:00", '%Y-%m-%d %H:%M:%S'))
-#         comment8 = Blog_Replies(text=comments.comment_data[7]["text"], post_id=2, user_id=5, comment_id=3, blocked="TRUE", date_submitted=datetime.strptime("2023-02-05 00:10:00", '%Y-%m-%d %H:%M:%S'))
-#         comment9 = Blog_Comments(text=comments.comment_data[3]["text"], post_id=3, user_id=6)
-#         comment10 = Blog_Replies(text=comments.comment_data[7]["text"], post_id=3, user_id=5, comment_id=5)
-#         db.session.add(comment1)
-#         db.session.add(comment2)
-#         db.session.add(comment3)
-#         db.session.add(comment4)
-#         db.session.add(comment5)
-#         db.session.add(comment6)
-#         db.session.add(comment7)
-#         db.session.add(comment8)
-#         db.session.add(comment9)
-#         db.session.add(comment10)
-#         db.session.commit()
-
-#         for i in range(10):
-#             update_stats_comments_total()
-
-# # Create dummie Likes and Bookmarks in the database, as well as updating the 'stats' related to those
-# def create_likes_and_bookmarks():
-#     likes_exist = Blog_Likes.query.get(1)
-#     if not likes_exist:
-#         like1 = Blog_Likes(post_id=2, user_id=4)
-#         like2 = Blog_Likes(post_id=2, user_id=5)
-#         like3 = Blog_Likes(post_id=2, user_id=6)
-#         like4 = Blog_Likes(post_id=2, user_id=7)
-#         like5 = Blog_Likes(post_id=1, user_id=7)
-#         like6 = Blog_Likes(post_id=3, user_id=6)
-#         like7 = Blog_Likes(post_id=3, user_id=8)
-#         like8 = Blog_Likes(post_id=4, user_id=8)
-#         like9 = Blog_Likes(post_id=5, user_id=8)
-#         like10 = Blog_Likes(post_id=6, user_id=4)
-#         bookmark1 = Blog_Bookmarks(post_id=2, user_id=4)
-#         bookmark2 = Blog_Bookmarks(post_id=1, user_id=4)
-#         bookmark3 = Blog_Bookmarks(post_id=4, user_id=5)
-#         bookmark4 = Blog_Bookmarks(post_id=6, user_id=5)
-#         bookmark5 = Blog_Bookmarks(post_id=2, user_id=5)
-#         bookmark6 = Blog_Bookmarks(post_id=1, user_id=6)
-#         bookmark7 = Blog_Bookmarks(post_id=3, user_id=6)
-#         bookmark8 = Blog_Bookmarks(post_id=4, user_id=6)
-#         bookmark9 = Blog_Bookmarks(post_id=5, user_id=7)
-#         bookmark10 = Blog_Bookmarks(post_id=6, user_id=7)
-#         db.session.add(like1)
-#         db.session.add(like2)
-#         db.session.add(like3)
-#         db.session.add(like4)
-#         db.session.add(like5)
-#         db.session.add(like6)
-#         db.session.add(like7)
-#         db.session.add(like8)
-#         db.session.add(like9)
-#         db.session.add(like10)
-#         db.session.add(bookmark1)
-#         db.session.add(bookmark2)
-#         db.session.add(bookmark3)
-#         db.session.add(bookmark4)
-#         db.session.add(bookmark5)
-#         db.session.add(bookmark6)
-#         db.session.add(bookmark7)
-#         db.session.add(bookmark8)
-#         db.session.add(bookmark9)
-#         db.session.add(bookmark10)
-#         db.session.commit()
-#         for i in range (10):
-#             update_likes(1)
-#             update_bookmarks(1)
 
 # Testing the contact model:
 def create_contact_db():
@@ -225,6 +166,4 @@ def create_contact_db():
 
 if __name__ == '__main__':
     create_admin_acct()
-    create_dummie_accts()
     create_posts()
-    create_comments()
