@@ -1,19 +1,14 @@
 from flask import current_app
+from app.models import Blog_Contact, Blog_Posts, Blog_Stats, Blog_Theme, Blog_User
 from app.extensions import db
-from app.models.user import Blog_User
-from app.models.posts import Blog_Posts
-from app.models.themes import Blog_Theme
-from app.models.comments import Blog_Comments, Blog_Replies
-from app.models.stats import Blog_Stats
-from app.models.bookmarks import Blog_Bookmarks
-from app.models.likes import Blog_Likes
-from app.models.contact import Blog_Contact
 # from app.models.text import about_text_author, about_text_user  # dummie strings
 from app.dummie_data import authors, posts, themes, comments
-from app.account.helpers import hash_pw
-from app.models.helpers import pic_src_user, pic_src_post, pic_src_theme, update_stats_comments_total, update_stats_users_total, update_likes, update_bookmarks, delete_comment, delete_reply, update_approved_post_stats, update_stats_users_active
+# from app.helpers import hash_pw
+from app.helpers import pic_src_user, pic_src_post, pic_src_theme
 from datetime import datetime
+from faker import Faker
 
+fake = Faker()
 
 # Creating a super_admin, a default author account, and a default user account
 # The super_admin is important as this will enable the management of all other users.
@@ -42,10 +37,10 @@ def create_admin_acct():
     super_admin_exists = Blog_User.query.get(1)
     if not super_admin_exists:
         the_super_admin = Blog_User(
-            name=ADMIN_NAME, email=ADMIN_EMAIL, password=hash_pw(ADMIN_PW), type="super_admin", picture=ADMIN_PICTURE)
-        the_default_author = Blog_User(name=DEFAULT_AUTHOR_NAME, email=DEFAULT_AUTHOR_EMAIL, password=hash_pw(DEFAULT_AUTHOR_PW),
+            name=ADMIN_NAME, email=ADMIN_EMAIL, password=(ADMIN_PW), type="super_admin", picture=ADMIN_PICTURE)
+        the_default_author = Blog_User(name=DEFAULT_AUTHOR_NAME, email=DEFAULT_AUTHOR_EMAIL, password=(DEFAULT_AUTHOR_PW),
                                     type="author", about=DEFAULT_AUTHOR_ABOUT, picture=DEFAULT_AUTHOR_PICTURE)
-        the_default_user = Blog_User(name=DEFAULT_USER_NAME, email=DEFAULT_USER_EMAIL, password=hash_pw(DEFAULT_USER_PW),
+        the_default_user = Blog_User(name=DEFAULT_USER_NAME, email=DEFAULT_USER_EMAIL, password=(DEFAULT_USER_PW),
                                     type="user", about=DEFAULT_USER_ABOUT, picture=DEFAULT_USER_PICTURE)
         db.session.add(the_super_admin)
         db.session.add(the_default_author)
@@ -132,186 +127,92 @@ POST_BODY = posts.post_body
 def create_posts():
     # Check if dummie posts exists in the database, if not, create the posts:
     posts_exist = Blog_Posts.query.get(1)
-    if not posts_exist:
-        post1 = Blog_Posts(theme_id = posts.post_data[0]["theme"], title = posts.post_data[0]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[0]["author_id"], picture_v=posts.post_data[0]["picture_v"], 
-                            picture_v_source=posts.post_data[0]["picture_v_source"], picture_h=posts.post_data[0]["picture_h"],
-                            picture_h_source=posts.post_data[0]["picture_h_source"], picture_s=posts.post_data[0]["picture_s"],
-                            picture_s_source=posts.post_data[0]["picture_s_source"], picture_alt=posts.post_data[0]["picture_alt"],
-                            admin_approved="TRUE", date_submitted=posts.post_data[0]["date_submitted"], date_to_post=posts.post_data[0]["date_to_post"])
-        post2 = Blog_Posts(theme_id = posts.post_data[1]["theme"], title = posts.post_data[1]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[1]["author_id"], picture_v=posts.post_data[1]["picture_v"], 
-                            picture_v_source=posts.post_data[1]["picture_v_source"], picture_h=posts.post_data[1]["picture_h"],
-                            picture_h_source=posts.post_data[1]["picture_h_source"], picture_s=posts.post_data[1]["picture_s"],
-                            picture_s_source=posts.post_data[1]["picture_s_source"], picture_alt=posts.post_data[1]["picture_alt"],
-                            admin_approved="TRUE", date_submitted=posts.post_data[1]["date_submitted"], date_to_post=posts.post_data[1]["date_to_post"])
-        post3 = Blog_Posts(theme_id = posts.post_data[2]["theme"], title = posts.post_data[2]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[2]["author_id"], picture_v=posts.post_data[2]["picture_v"], 
-                            picture_v_source=posts.post_data[2]["picture_v_source"], picture_h=posts.post_data[2]["picture_h"],
-                            picture_h_source=posts.post_data[2]["picture_h_source"], picture_s=posts.post_data[2]["picture_s"],
-                            picture_s_source=posts.post_data[2]["picture_s_source"], picture_alt=posts.post_data[2]["picture_alt"],
-                            admin_approved="TRUE", date_submitted=posts.post_data[2]["date_submitted"], date_to_post=posts.post_data[2]["date_to_post"])
-        post4 = Blog_Posts(theme_id = posts.post_data[3]["theme"], title = posts.post_data[3]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[3]["author_id"], picture_v=posts.post_data[3]["picture_v"], 
-                            picture_v_source=posts.post_data[3]["picture_v_source"], picture_h=posts.post_data[3]["picture_h"],
-                            picture_h_source=posts.post_data[3]["picture_h_source"], picture_s=posts.post_data[3]["picture_s"],
-                            picture_s_source=posts.post_data[3]["picture_s_source"], picture_alt=posts.post_data[3]["picture_alt"],
-                            admin_approved="TRUE", date_submitted=posts.post_data[3]["date_submitted"], date_to_post=posts.post_data[3]["date_to_post"])
-        post5 = Blog_Posts(theme_id = posts.post_data[4]["theme"], title = posts.post_data[4]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[4]["author_id"], picture_v=posts.post_data[4]["picture_v"], 
-                            picture_v_source=posts.post_data[4]["picture_v_source"], picture_h=posts.post_data[4]["picture_h"],
-                            picture_h_source=posts.post_data[4]["picture_h_source"], picture_s=posts.post_data[4]["picture_s"],
-                            picture_s_source=posts.post_data[4]["picture_s_source"], picture_alt=posts.post_data[4]["picture_alt"],
-                            admin_approved="TRUE", date_submitted=posts.post_data[4]["date_submitted"], date_to_post=posts.post_data[4]["date_to_post"])
-        post6 = Blog_Posts(theme_id = posts.post_data[5]["theme"], title = posts.post_data[5]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[5]["author_id"], picture_v=posts.post_data[5]["picture_v"], 
-                            picture_v_source=posts.post_data[5]["picture_v_source"], picture_h=posts.post_data[5]["picture_h"],
-                            picture_h_source=posts.post_data[5]["picture_h_source"], picture_s=posts.post_data[5]["picture_s"],
-                            picture_s_source=posts.post_data[5]["picture_s_source"], picture_alt=posts.post_data[5]["picture_alt"],
-                            admin_approved="TRUE", date_submitted=posts.post_data[5]["date_submitted"], date_to_post=posts.post_data[5]["date_to_post"])
-        post7 = Blog_Posts(theme_id = posts.post_data[6]["theme"], title = posts.post_data[6]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[6]["author_id"], picture_v=posts.post_data[6]["picture_v"], 
-                            picture_v_source=posts.post_data[6]["picture_v_source"], picture_h=posts.post_data[6]["picture_h"],
-                            picture_h_source=posts.post_data[6]["picture_h_source"], picture_s=posts.post_data[6]["picture_s"],
-                            picture_s_source=posts.post_data[6]["picture_s_source"], picture_alt=posts.post_data[6]["picture_alt"],
-                            admin_approved= "TRUE", date_submitted=posts.post_data[6]["date_submitted"], date_to_post=posts.post_data[6]["date_to_post"])
-        post8 = Blog_Posts(theme_id = posts.post_data[7]["theme"], title = posts.post_data[7]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[7]["author_id"], picture_v=posts.post_data[7]["picture_v"], 
-                            picture_v_source=posts.post_data[7]["picture_v_source"], picture_h=posts.post_data[7]["picture_h"],
-                            picture_h_source=posts.post_data[7]["picture_h_source"], picture_s=posts.post_data[7]["picture_s"],
-                            picture_s_source=posts.post_data[7]["picture_s_source"], picture_alt=posts.post_data[7]["picture_alt"],
-                            admin_approved= "TRUE", date_submitted=posts.post_data[7]["date_submitted"], date_to_post=posts.post_data[7]["date_to_post"])
-        post9 = Blog_Posts(theme_id = posts.post_data[8]["theme"], title = posts.post_data[8]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[8]["author_id"], picture_v=posts.post_data[8]["picture_v"], 
-                            picture_v_source=posts.post_data[8]["picture_v_source"], picture_h=posts.post_data[8]["picture_h"],
-                            picture_h_source=posts.post_data[8]["picture_h_source"], picture_s=posts.post_data[8]["picture_s"],
-                            picture_s_source=posts.post_data[8]["picture_s_source"], picture_alt=posts.post_data[8]["picture_alt"],
-                            admin_approved= "TRUE", date_submitted=posts.post_data[8]["date_submitted"], date_to_post=posts.post_data[8]["date_to_post"])
-        post10 = Blog_Posts(theme_id = posts.post_data[9]["theme"], title = posts.post_data[9]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[9]["author_id"], picture_v=posts.post_data[9]["picture_v"], 
-                            picture_v_source=posts.post_data[9]["picture_v_source"], picture_h=posts.post_data[9]["picture_h"],
-                            picture_h_source=posts.post_data[9]["picture_h_source"], picture_s=posts.post_data[9]["picture_s"],
-                            picture_s_source=posts.post_data[9]["picture_s_source"], picture_alt=posts.post_data[9]["picture_alt"],
-                            admin_approved="TRUE", date_submitted=posts.post_data[9]["date_submitted"], date_to_post=posts.post_data[9]["date_to_post"])
-        post11 = Blog_Posts(theme_id=posts.post_data[10]["theme"], title=posts.post_data[10]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[10]["author_id"], picture_v=posts.post_data[10]["picture_v"],
-                            picture_v_source=posts.post_data[10]["picture_v_source"], picture_h=posts.post_data[10]["picture_h"],
-                            picture_h_source=posts.post_data[10]["picture_h_source"], picture_s=posts.post_data[10]["picture_s"],
-                            picture_s_source=posts.post_data[10]["picture_s_source"], picture_alt=posts.post_data[10]["picture_alt"],
-                            admin_approved="TRUE", date_submitted=posts.post_data[10]["date_submitted"], date_to_post=posts.post_data[10]["date_to_post"])
-        post12 = Blog_Posts(theme_id=posts.post_data[11]["theme"], title=posts.post_data[11]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[11]["author_id"], picture_v=posts.post_data[11]["picture_v"],
-                            picture_v_source=posts.post_data[11]["picture_v_source"], picture_h=posts.post_data[11]["picture_h"],
-                            picture_h_source=posts.post_data[11]["picture_h_source"], picture_s=posts.post_data[11]["picture_s"],
-                            picture_s_source=posts.post_data[11]["picture_s_source"], picture_alt=posts.post_data[11]["picture_alt"],
-                            admin_approved="TRUE", date_submitted=posts.post_data[11]["date_submitted"], date_to_post=posts.post_data[11]["date_to_post"])
-        post13 = Blog_Posts(theme_id=posts.post_data[12]["theme"], title=posts.post_data[12]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[12]["author_id"], picture_v=posts.post_data[12]["picture_v"],
-                            picture_v_source=posts.post_data[12]["picture_v_source"], picture_h=posts.post_data[12]["picture_h"],
-                            picture_h_source=posts.post_data[12]["picture_h_source"], picture_s=posts.post_data[12]["picture_s"],
-                            picture_s_source=posts.post_data[12]["picture_s_source"], picture_alt=posts.post_data[12]["picture_alt"])
-        post14 = Blog_Posts(theme_id=posts.post_data[13]["theme"], title=posts.post_data[13]["title"], intro=POST_INTRO,
-                            body=POST_BODY, author_id=posts.post_data[13]["author_id"], picture_v=posts.post_data[13]["picture_v"],
-                            picture_v_source=posts.post_data[13]["picture_v_source"], picture_h=posts.post_data[13]["picture_h"],
-                            picture_h_source=posts.post_data[13]["picture_h_source"], picture_s=posts.post_data[13]["picture_s"],
-                            picture_s_source=posts.post_data[13]["picture_s_source"], picture_alt=posts.post_data[13]["picture_alt"])
-        db.session.add(post1)
-        db.session.add(post2)
-        db.session.add(post3)
-        db.session.add(post4)
-        db.session.add(post5)
-        db.session.add(post6)
-        db.session.add(post7)
-        db.session.add(post8)
-        db.session.add(post9)
-        db.session.add(post10)
-        db.session.add(post11)
-        db.session.add(post12)
-        db.session.add(post13)
-        db.session.add(post14)
+    for i in range(12):
+        post = Blog_Posts(
+            title=fake.ti
+        )
+
         db.session.commit()
 
-        for i in range (12):
-            update_approved_post_stats(1)
 
 # Creating dummie comments in posts
 
-def create_comments():
-    comments_exist = Blog_Comments.query.get(1)
-    if not comments_exist:
-        comment1 = Blog_Comments(text=comments.comment_data[0]["text"], post_id=1, user_id=4)
-        comment2 = Blog_Comments(text=comments.comment_data[1]["text"], post_id=2, user_id=4)
-        comment3 = Blog_Comments(text=comments.comment_data[2]["text"], post_id=2, user_id=4, date_submitted=datetime.strptime("2023-02-01 00:10:00", '%Y-%m-%d %H:%M:%S'))
-        comment4 = Blog_Comments(text=comments.comment_data[3]["text"], post_id=2, user_id=4, blocked="TRUE")
-        comment5 = Blog_Replies(text=comments.comment_data[4]["text"], post_id=2, user_id=5, comment_id=3, date_submitted=datetime.strptime("2023-02-02 00:10:00", '%Y-%m-%d %H:%M:%S'))
-        comment6 = Blog_Replies(text=comments.comment_data[5]["text"], post_id=2, user_id=4, comment_id=3, date_submitted=datetime.strptime("2023-02-03 00:10:00", '%Y-%m-%d %H:%M:%S'))
-        comment7 = Blog_Replies(text=comments.comment_data[6]["text"], post_id=2, user_id=5, comment_id=3, date_submitted=datetime.strptime("2023-02-04 00:10:00", '%Y-%m-%d %H:%M:%S'))
-        comment8 = Blog_Replies(text=comments.comment_data[7]["text"], post_id=2, user_id=5, comment_id=3, blocked="TRUE", date_submitted=datetime.strptime("2023-02-05 00:10:00", '%Y-%m-%d %H:%M:%S'))
-        comment9 = Blog_Comments(text=comments.comment_data[3]["text"], post_id=3, user_id=6)
-        comment10 = Blog_Replies(text=comments.comment_data[7]["text"], post_id=3, user_id=5, comment_id=5)
-        db.session.add(comment1)
-        db.session.add(comment2)
-        db.session.add(comment3)
-        db.session.add(comment4)
-        db.session.add(comment5)
-        db.session.add(comment6)
-        db.session.add(comment7)
-        db.session.add(comment8)
-        db.session.add(comment9)
-        db.session.add(comment10)
-        db.session.commit()
+# def create_comments():
+#     comments_exist = Blog_Comments.query.get(1)
+#     if not comments_exist:
+#         comment1 = Blog_Comments(text=comments.comment_data[0]["text"], post_id=1, user_id=4)
+#         comment2 = Blog_Comments(text=comments.comment_data[1]["text"], post_id=2, user_id=4)
+#         comment3 = Blog_Comments(text=comments.comment_data[2]["text"], post_id=2, user_id=4, date_submitted=datetime.strptime("2023-02-01 00:10:00", '%Y-%m-%d %H:%M:%S'))
+#         comment4 = Blog_Comments(text=comments.comment_data[3]["text"], post_id=2, user_id=4, blocked="TRUE")
+#         comment5 = Blog_Replies(text=comments.comment_data[4]["text"], post_id=2, user_id=5, comment_id=3, date_submitted=datetime.strptime("2023-02-02 00:10:00", '%Y-%m-%d %H:%M:%S'))
+#         comment6 = Blog_Replies(text=comments.comment_data[5]["text"], post_id=2, user_id=4, comment_id=3, date_submitted=datetime.strptime("2023-02-03 00:10:00", '%Y-%m-%d %H:%M:%S'))
+#         comment7 = Blog_Replies(text=comments.comment_data[6]["text"], post_id=2, user_id=5, comment_id=3, date_submitted=datetime.strptime("2023-02-04 00:10:00", '%Y-%m-%d %H:%M:%S'))
+#         comment8 = Blog_Replies(text=comments.comment_data[7]["text"], post_id=2, user_id=5, comment_id=3, blocked="TRUE", date_submitted=datetime.strptime("2023-02-05 00:10:00", '%Y-%m-%d %H:%M:%S'))
+#         comment9 = Blog_Comments(text=comments.comment_data[3]["text"], post_id=3, user_id=6)
+#         comment10 = Blog_Replies(text=comments.comment_data[7]["text"], post_id=3, user_id=5, comment_id=5)
+#         db.session.add(comment1)
+#         db.session.add(comment2)
+#         db.session.add(comment3)
+#         db.session.add(comment4)
+#         db.session.add(comment5)
+#         db.session.add(comment6)
+#         db.session.add(comment7)
+#         db.session.add(comment8)
+#         db.session.add(comment9)
+#         db.session.add(comment10)
+#         db.session.commit()
 
-        for i in range(10):
-            update_stats_comments_total()
+#         for i in range(10):
+#             update_stats_comments_total()
 
-# Create dummie Likes and Bookmarks in the database, as well as updating the 'stats' related to those
-def create_likes_and_bookmarks():
-    likes_exist = Blog_Likes.query.get(1)
-    if not likes_exist:
-        like1 = Blog_Likes(post_id=2, user_id=4)
-        like2 = Blog_Likes(post_id=2, user_id=5)
-        like3 = Blog_Likes(post_id=2, user_id=6)
-        like4 = Blog_Likes(post_id=2, user_id=7)
-        like5 = Blog_Likes(post_id=1, user_id=7)
-        like6 = Blog_Likes(post_id=3, user_id=6)
-        like7 = Blog_Likes(post_id=3, user_id=8)
-        like8 = Blog_Likes(post_id=4, user_id=8)
-        like9 = Blog_Likes(post_id=5, user_id=8)
-        like10 = Blog_Likes(post_id=6, user_id=4)
-        bookmark1 = Blog_Bookmarks(post_id=2, user_id=4)
-        bookmark2 = Blog_Bookmarks(post_id=1, user_id=4)
-        bookmark3 = Blog_Bookmarks(post_id=4, user_id=5)
-        bookmark4 = Blog_Bookmarks(post_id=6, user_id=5)
-        bookmark5 = Blog_Bookmarks(post_id=2, user_id=5)
-        bookmark6 = Blog_Bookmarks(post_id=1, user_id=6)
-        bookmark7 = Blog_Bookmarks(post_id=3, user_id=6)
-        bookmark8 = Blog_Bookmarks(post_id=4, user_id=6)
-        bookmark9 = Blog_Bookmarks(post_id=5, user_id=7)
-        bookmark10 = Blog_Bookmarks(post_id=6, user_id=7)
-        db.session.add(like1)
-        db.session.add(like2)
-        db.session.add(like3)
-        db.session.add(like4)
-        db.session.add(like5)
-        db.session.add(like6)
-        db.session.add(like7)
-        db.session.add(like8)
-        db.session.add(like9)
-        db.session.add(like10)
-        db.session.add(bookmark1)
-        db.session.add(bookmark2)
-        db.session.add(bookmark3)
-        db.session.add(bookmark4)
-        db.session.add(bookmark5)
-        db.session.add(bookmark6)
-        db.session.add(bookmark7)
-        db.session.add(bookmark8)
-        db.session.add(bookmark9)
-        db.session.add(bookmark10)
-        db.session.commit()
-        for i in range (10):
-            update_likes(1)
-            update_bookmarks(1)
+# # Create dummie Likes and Bookmarks in the database, as well as updating the 'stats' related to those
+# def create_likes_and_bookmarks():
+#     likes_exist = Blog_Likes.query.get(1)
+#     if not likes_exist:
+#         like1 = Blog_Likes(post_id=2, user_id=4)
+#         like2 = Blog_Likes(post_id=2, user_id=5)
+#         like3 = Blog_Likes(post_id=2, user_id=6)
+#         like4 = Blog_Likes(post_id=2, user_id=7)
+#         like5 = Blog_Likes(post_id=1, user_id=7)
+#         like6 = Blog_Likes(post_id=3, user_id=6)
+#         like7 = Blog_Likes(post_id=3, user_id=8)
+#         like8 = Blog_Likes(post_id=4, user_id=8)
+#         like9 = Blog_Likes(post_id=5, user_id=8)
+#         like10 = Blog_Likes(post_id=6, user_id=4)
+#         bookmark1 = Blog_Bookmarks(post_id=2, user_id=4)
+#         bookmark2 = Blog_Bookmarks(post_id=1, user_id=4)
+#         bookmark3 = Blog_Bookmarks(post_id=4, user_id=5)
+#         bookmark4 = Blog_Bookmarks(post_id=6, user_id=5)
+#         bookmark5 = Blog_Bookmarks(post_id=2, user_id=5)
+#         bookmark6 = Blog_Bookmarks(post_id=1, user_id=6)
+#         bookmark7 = Blog_Bookmarks(post_id=3, user_id=6)
+#         bookmark8 = Blog_Bookmarks(post_id=4, user_id=6)
+#         bookmark9 = Blog_Bookmarks(post_id=5, user_id=7)
+#         bookmark10 = Blog_Bookmarks(post_id=6, user_id=7)
+#         db.session.add(like1)
+#         db.session.add(like2)
+#         db.session.add(like3)
+#         db.session.add(like4)
+#         db.session.add(like5)
+#         db.session.add(like6)
+#         db.session.add(like7)
+#         db.session.add(like8)
+#         db.session.add(like9)
+#         db.session.add(like10)
+#         db.session.add(bookmark1)
+#         db.session.add(bookmark2)
+#         db.session.add(bookmark3)
+#         db.session.add(bookmark4)
+#         db.session.add(bookmark5)
+#         db.session.add(bookmark6)
+#         db.session.add(bookmark7)
+#         db.session.add(bookmark8)
+#         db.session.add(bookmark9)
+#         db.session.add(bookmark10)
+#         db.session.commit()
+#         for i in range (10):
+#             update_likes(1)
+#             update_bookmarks(1)
 
 # Testing the contact model:
 def create_contact_db():

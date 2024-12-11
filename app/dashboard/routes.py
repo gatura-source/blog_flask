@@ -1,15 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, current_app
 from app.extensions import db
-from app.models.user import Blog_User
-from app.models.posts import Blog_Posts
+from app.models import Blog_Posts, Blog_User
 from app.dashboard.forms import The_Posts
-from app.dashboard.helpers import check_blog_picture, delete_blog_img
-from app.models.themes import Blog_Theme
-from app.models.helpers import update_stats_users_active, update_approved_post_stats, change_authorship_of_all_post
-from app.models.likes import Blog_Likes
-from app.models.bookmarks import Blog_Bookmarks
-from app.models.comments import Blog_Comments, Blog_Replies
-from app.models.helpers import update_likes, update_bookmarks, delete_comment, delete_reply
+from app.dashboard.helpers import check_blog_picture, delete_blog_img, admin_required
+from app.helpers import update_stats_users_active, update_approved_post_stats, change_authorship_of_all_post
 from datetime import datetime
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
@@ -25,14 +19,10 @@ dashboard = Blueprint('dashboard', __name__)
 # Managing users: see all users
 @dashboard.route("/dashboard/manage_users", methods=["GET", "POST"])
 @login_required
+@admin_required()
 def users_table():
-    user_type = current_user.type
-    if user_type == "admin" or user_type == "super_admin":
-        all_blog_users = Blog_User.query.order_by(Blog_User.id)
-        return render_template("dashboard/users_table.html", logged_in=current_user.is_authenticated, all_blog_users=all_blog_users)
-    else:
-        flash("Access denied: admin access only.")
-        return redirect(url_for('website.home'))
+    all_blog_users = Blog_User.query.order_by(Blog_User.id)
+    return render_template("dashboard/users_table.html", all_blog_users=all_blog_users)
 
 # Managing users: update user
 @dashboard.route("/dashboard/manage_users/update/<int:id>", methods=["GET", "POST"])
@@ -44,7 +34,7 @@ def user_update(id):
 
     if request.method == "POST":
         if Blog_User.query.filter(Blog_User.id != id, Blog_User.email == request.form.get("email_update")).first():
-            flash("This email is already registered with us.")
+            flash("Email Invalid.")
             return render_template("dashboard/users_user_update.html", id=user_to_update.id, logged_in=current_user.is_authenticated, user_to_update=user_to_update, acct_types=acct_types, acct_blocked=acct_blocked)
         elif Blog_User.query.filter(Blog_User.id != id, Blog_User.name == request.form.get("username_update")).first():
             flash("This username is already registered with us.")

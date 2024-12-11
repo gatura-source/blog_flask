@@ -3,8 +3,8 @@ from datetime import datetime
 from flask_login import UserMixin
 from datetime import datetime
 from flask import current_app
-from werkzeug.security import check_password_hash
-from .helpers import hash_pw
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 class Blog_Posts(db.Model):
     __tablename__ = "blog_posts"
@@ -48,7 +48,7 @@ class Blog_User(UserMixin, db.Model):
         db.String(), default="Picture_default.jpg")
     # type can be: admin, super_admin, author, or user
     type = db.Column(db.String(100), nullable=False, default="user")
-    blocked = db.Column(db.String(5), default="FALSE")
+    blocked = db.Column(db.Boolean, default=False)
     admin_notes = db.Column(db.Text)
     posts = db.relationship('Blog_Posts', backref='author')
    
@@ -56,7 +56,7 @@ class Blog_User(UserMixin, db.Model):
     def __init__(self, **kwargs):
         super(Blog_User, self).__init__(**kwargs)
         if self.type is None or self.type == "user":
-            if self.email == current_app.config['SUPERUSER']:
+            if self.email == current_app.config['SUPER_USER']:
                 self.type = "super_user" 
 
     
@@ -68,7 +68,7 @@ class Blog_User(UserMixin, db.Model):
 
     @password.setter
     def password(self, password):
-        self.password_hash = hash_pw(password)
+        self.password_hash = generate_password_hash(password)
 
 
     def verify_password(self, password):

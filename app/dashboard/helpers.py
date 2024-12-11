@@ -2,6 +2,10 @@ from app.general_helpers.helpers import check_image_filename
 from werkzeug.utils import secure_filename
 from flask import current_app
 import os
+from app.models import Blog_User
+from functools import wraps
+from flask import abort
+from flask_login import current_user
 
 def check_blog_picture(post_id, filename, db_column):
     """
@@ -34,3 +38,15 @@ def delete_blog_img(img):
                 os.remove(os.path.join(current_app.config["BLOG_IMG_FOLDER"], img))
             except:
                 raise NameError("Blog post image could not be deleted.")
+
+
+def admin_required():
+    def decorated(f):
+        @wraps(f)
+        def decorated_func(*args, **kwargs):
+            if not current_user.type or not current_user.type == 'super_admin':
+                current_app.logger.warnning(f"current_user ROLE: {(current_user.role)}: {current_user.email} not superuser")
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_func
+    return decorated

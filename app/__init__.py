@@ -37,7 +37,7 @@ def create_app(config_class=Config):
     from config import Config
     from flask import current_app
 
-    from app.models import user, posts, themes, contact, bookmarks, comments, stats
+    from .models import Blog_User, Blog_Contact, Blog_Stats, Blog_Posts, Blog_Theme
 
     app.register_blueprint(account)
     app.register_blueprint(dashboard)
