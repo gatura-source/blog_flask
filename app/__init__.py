@@ -4,7 +4,7 @@ from app.config import Config
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from .models import Blog_User, Blog_Posts, Blog_Contact, Blog_Stats, Blog_Theme
+from .models import Blog_User, Blog_Posts, Blog_Contact, Blog_Stats, Blog_Theme, Role
 
 
 def register_shell_context(app):
@@ -19,7 +19,8 @@ def register_shell_context(app):
                 "Post": Blog_Posts,
                 "Contact": Blog_Contact,
                 "Stat": Blog_Stats,
-                "Theme": Blog_Theme}
+                "Theme": Blog_Theme,
+                "Role":Role,}
     app.shell_context_processor(shell_context)
 
 def create_app(config_class=Config):

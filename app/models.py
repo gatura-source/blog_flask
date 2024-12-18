@@ -5,6 +5,99 @@ from datetime import datetime
 from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 
+Column = db.Column
+relationship = db.Relationship
+class Permissions:
+    """Permissions for church management system."""
+    CREATE_USER = 1 << 12  # 4096
+    EDIT_USER = 1 << 13  # 8192
+    DELETE_USER = 1 << 14  # 16384
+    CREATE_BLOG = 1 << 17  # 131072
+    EDIT_BLOG = 1 << 18  # 262144
+    DELETE_BLOG = 1 << 19  # 524288
+    MOD_BLOG = 1 << 20  # 1048576
+
+
+class Role(db.Model):
+    __tablename__ = 'role'
+    id = Column(db.Integer, primary_key=True)
+    name = Column(db.String(32), nullable=False)
+    permissions = Column(db.Integer, default=0)
+    users = relationship('Blog_User', backref='role', lazy='dynamic')
+
+    def __init__(self, **kwargs) -> None:
+        super(Role, self).__init__(**kwargs)
+        if self.permissions is None:
+            self.permissions = 0
+
+    @staticmethod
+    def create_roles():
+        roles = {
+            'ADMIN': [getattr(Permissions, x) for x in dir(Permissions)[:7]],
+            'AUTHOR': [
+                Permissions.CREATE_BLOG, Permissions.EDIT_BLOG,
+                Permissions.DELETE_BLOG, Permissions.MOD_BLOG
+            ],
+            'USER': [0]
+        }
+        for r in roles:
+            role = Role.query.filter_by(name=r).first()
+            if role is None:
+                role = Role(name=r)
+                role.reset_permissions()
+                for perm in roles[r]:
+                    role.add_permission(perm)
+                db.session.add(role)
+            db.session.commit()
+            print("[INFO] ROLES ADDED!!")
+
+    def add_permission(self, perm):
+        """adds permissions to role
+        Keyword arguments:
+        perm  -- permissions to add
+        Return: None
+        """
+        try:
+            if not self.has_permission(perm):
+                self.permissions += perm
+                return True
+            return False
+        except Exception:
+            return False
+            # abort(500)
+
+    def remove_permission(self, perm):
+        """remove permissions
+        Keyword arguments:
+        perm -- permissions to remove
+        Return: return_descr
+        """
+        try:
+            if self.has_permission(perm):
+                self.permissions -= perm
+                return True
+            return False
+        except Exception:
+            return False
+
+    def has_permission(self, perm: int) -> bool:
+        """Check if user has a perm
+        Keyword arguments:
+        perm  -- permissions to check
+        Return: bool
+        """
+        return self.permissions & perm == perm
+
+    def reset_permissions(self):
+        """sets permissions to 0
+        Keyword arguments:
+        argument -- description
+        Return: return_description
+        """
+        self.permissions = 0
+
+    def __repr__(self) -> str:
+        return f'<Role {self.name}>'
 
 class Blog_Posts(db.Model):
     __tablename__ = "blog_posts"
@@ -42,7 +135,7 @@ class Blog_User(UserMixin, db.Model):
     picture = db.Column(
         db.String(), default="Picture_default.jpg")
     # type can be: admin, super_admin, author, or user
-    type = db.Column(db.String(100), nullable=False, default="user")
+    role_id = Column(db.Integer, db.ForeignKey('role.id'))
     blocked = db.Column(db.Boolean, default=False)
     admin_notes = db.Column(db.Text)
     posts = db.relationship('Blog_Posts', backref='author')
@@ -50,7 +143,7 @@ class Blog_User(UserMixin, db.Model):
 
     def __init__(self, **kwargs):
         super(Blog_User, self).__init__(**kwargs)
-        if self.type is None or self.type == "user":
+        if self.role is None or self.role == Role.query.filter_by(name="USER").first():
             if self.email == current_app.config['SUPER_USER']:
                 self.type = "super_user" 
 

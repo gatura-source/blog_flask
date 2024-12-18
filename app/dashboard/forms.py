@@ -12,8 +12,6 @@ class The_Posts(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
     intro = StringField("Intro", validators=[DataRequired()])
     body = CKEditorField("Body", validators=[DataRequired()])
-
-    picture_v = FileField("Picture Vertical")
     picture_v_source = StringField(
         "Picture Vertical Source", default="http://")
     picture_v_size = StringField("Picture File Size")

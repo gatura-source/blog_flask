@@ -93,8 +93,8 @@ def hello():
 
 @account.route('/dashboard')
 @login_required
-@admin_required()
 def dashboard():
+    if current_user.type == 
     current_stats = Blog_Stats.query.all()
     posts_pending_approval = Blog_Posts.query.filter_by(
         admin_approved=False).all()

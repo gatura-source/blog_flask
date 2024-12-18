@@ -12,7 +12,7 @@
             {{form.theme (class="form-control")}}
             <br>
 
-            {% if current_user.type == "super_admin" %}
+            {% if current_user.role.name == "ADMIN" %}
             {{form.author.label (class="form-label")}}
             {{form.author (class="form-control")}}
             <br>
