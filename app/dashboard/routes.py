@@ -279,30 +279,36 @@ def preview_post(id):
 @login_required
 def edit_post(id):
     post_to_edit = Blog_Posts.query.get_or_404(id)
+    if current_user != post_to_edit:
+        abort(403)
     themes_list = [(u.id, u.theme) for u in db.session.query(Blog_Theme).all()]
     form = The_Posts(obj=themes_list)
     form.theme.choices = themes_list
-    if form.validate_on_submit():
-        post_to_edit.theme_id = form.theme.data
-        post_to_edit.date_to_post = form.date.data
-        post_to_edit.title = form.title.data
-        post_to_edit.intro = form.intro.data
-        post_to_edit.body = form.body.data
-        post_to_edit.picture_source = form.picture_source.data
-        post_to_edit.picture_alt = form.picture_alt.data
-        post_to_edit.meta_tag = form.meta_tag.data
-        post_to_edit.title_tag = form.title_tag.data
-        try:
-            if db.session.add(post_to_edit) and db.session.commit():
-                flash("Post edit success")
-                if current_user.type == "admin" or current_user.type == "super_admin":
-                    return redirect(url_for("dashboard.posts_table", logged_in=current_user.is_authenticated))
+    if request.method == "POST" :
+        if form.validate_on_submit():
+            post_to_edit.theme_id = form.theme.data
+            post_to_edit.date_to_post = form.date.data
+            post_to_edit.title = form.title.data
+            post_to_edit.intro = form.intro.data
+            post_to_edit.body = form.body.data
+            post_to_edit.picture_source = form.picture_source.data
+            post_to_edit.picture_alt = form.picture_alt.data
+            post_to_edit.meta_tag = form.meta_tag.data
+            post_to_edit.title_tag = form.title_tag.data
+            try:
+                db.session.commit()
+                if current_user.role.name == "ADMIN":
+                    flash("Post Edit success")
+                    return redirect(url_for("dashboard.posts_table"))
+                elif current_user.role.name == "AUTHOR":
+                    flash("Post Edit Success")
+                    return redirect(url_for("dashboard.posts_table_author"))
                 else:
-                    return redirect(url_for("dashboard.posts_table_author", logged_in=current_user.is_authenticated))
-        except Exception:
-            flash("Post edit Error")
-            db.session.rollback()
-            current_app.logger.error(f"ERROR while editing Post {post_to_edit.id}")
+                    abort(403)
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f"ERROR while editing Post {post_to_edit.id}: {e}")
+                flash("Post edit Error")
     form.theme.data = post_to_edit.theme_id
     form.author.data = post_to_edit.author.name
     form.date.data = post_to_edit.date_to_post
@@ -316,118 +322,6 @@ def edit_post(id):
     return render_template('dashboard/posts_edit_post.html', logged_in=current_user.is_authenticated, form=form, post_to_edit=post_to_edit)   
         
     
-        
-
-    # getting post information
-    post_to_edit = Blog_Posts.query.get_or_404(id)
-    themes_list = [(u.id, u.theme) for u in db.session.query(Blog_Theme).all()]
-    form = The_Posts(obj=themes_list)
-    form.theme.choices = themes_list
-
-    # changing the post
-    if form.validate_on_submit():
-        # get all information from the form with the exeption of the blog post pictures
-        # this will enable the saving of the information even if there is an error with the picture upload:
-        post_to_edit.theme_id = form.theme.data
-        post_to_edit.date_to_post = form.date.data
-        post_to_edit.title = form.title.data
-        post_to_edit.intro = form.intro.data
-        post_to_edit.body = form.body.data
-        post_to_edit.picture_v_source = form.picture_v_source.data
-        post_to_edit.picture_h_source = form.picture_h_source.data
-        post_to_edit.picture_s_source = form.picture_s_source.data
-        post_to_edit.picture_alt = form.picture_alt.data
-        post_to_edit.meta_tag = form.meta_tag.data
-        post_to_edit.title_tag = form.title_tag.data
-
-        # add form information to database without the pictures:
-        try:
-            db.session.commit()
-        except:
-            flash("Oops, error saving your changes, check all fields and try again.")
-        
-        # checking images: one image at a time
-        the_post_id = post_to_edit.id
-
-        submit_post_blog_img_provided = dict(v=False, h=False, s=False)
-        submit_post_blog_img_status = dict(v=False, h=False, s=False)
-
-        
-
-        img_size_not_accepted = False
-
-        # checking picture vertical:
-        if form.picture_v.data and int(form.picture_v_size.data) < 1500000:
-            img_v_filename = secure_filename(form.picture_v.data.filename)
-            submit_post_blog_img_handle(img_v_filename, "v")
-            submit_post_blog_img_provided["v"] = True
-        elif form.picture_v_size.data and int(form.picture_v_size.data) > 1500000:
-            img_size_not_accepted = True
-        elif form.picture_v_size.data and int(form.picture_v_size.data) < 1500000:
-            submit_post_blog_img_provided["v"] = True
-        else:
-            submit_post_blog_img_provided["v"] = False
-
-        # checking picture horizontal:
-        if form.picture_h.data and int(form.picture_h_size.data) < 1500000:
-            img_h_filename = secure_filename(form.picture_h.data.filename)
-            submit_post_blog_img_handle(img_h_filename, "h")
-            submit_post_blog_img_provided["h"] = True
-        elif form.picture_h_size.data and int(form.picture_h_size.data) > 1500000:
-            img_size_not_accepted = True
-        elif form.picture_h_size.data and int(form.picture_h_size.data) < 1500000:
-            submit_post_blog_img_provided["h"] = True
-        else:
-            submit_post_blog_img_provided["h"] = False
-
-        # checking picture squared:
-        if form.picture_s.data and int(form.picture_s_size.data) < 1500000:
-            img_s_filename = secure_filename(form.picture_s.data.filename)
-            submit_post_blog_img_handle(img_s_filename, "s")
-            submit_post_blog_img_provided["s"] = True
-        elif form.picture_s_size.data and int(form.picture_s_size.data) > 1500000:
-            img_size_not_accepted = True
-        elif form.picture_s_size.data and int(form.picture_s_size.data) < 1500000:
-            submit_post_blog_img_provided["s"] = True
-        else:
-            submit_post_blog_img_provided["s"] = False
-
-        # inform the user of the status of the post
-        problem_with_img_download = False
-
-        for key in submit_post_blog_img_provided:
-            if submit_post_blog_img_provided[key] == True:
-                if submit_post_blog_img_status[key] == False:
-                    problem_with_img_download = True
-
-        if img_size_not_accepted == True:
-            flash("Blog post edit saved, but one or more pictures were too large and couldn't be saved.")
-        elif problem_with_img_download == True:
-            flash(
-                "Blog post saved, but one or more pictures couldn't be saved. Check picture format.")
-        else:
-            flash("Blog post editted successfully!")
-
-        if current_user.type == "admin" or current_user.type == "super_admin":
-            return redirect(url_for("dashboard.posts_table", logged_in=current_user.is_authenticated))
-        else:
-            return redirect(url_for("dashboard.posts_table_author", logged_in=current_user.is_authenticated))
-        
-    # filling out the form with saved post data
-    form.theme.data = post_to_edit.theme_id
-    form.author.data = post_to_edit.author.name
-    form.date.data = post_to_edit.date_to_post
-    form.title.data = post_to_edit.title
-    form.intro.data = post_to_edit.intro
-    form.body.data = post_to_edit.body
-    form.picture_v_source.data = post_to_edit.picture_v_source
-    form.picture_h_source.data = post_to_edit.picture_h_source
-    form.picture_s_source.data = post_to_edit.picture_s_source
-    form.picture_alt.data = post_to_edit.picture_alt
-    form.meta_tag.data = post_to_edit.meta_tag
-    form.title_tag.data = post_to_edit.title_tag
-    return render_template('dashboard/posts_edit_post.html', logged_in=current_user.is_authenticated, form=form, post_to_edit=post_to_edit)
-
 # Deleting a post 
 @dashboard.route("/dashboard/manage_posts_author/delete_post/<int:id>", endpoint='delete_post_author', methods=["GET", "POST"])
 @dashboard.route("/dashboard/manage_posts/delete_post/<int:id>", methods=["GET", "POST"])
@@ -436,77 +330,28 @@ def delete_post(id, methods=['POST']):
     if request.method == 'POST':
         try:
             post_to_delete = Blog_Posts.query.get_or_404(id)
-            post_was_approved = post_to_delete.admin_approved
+            if post_to_delete.author != current_user:
+                abort(403)
             db.session.delete(post_to_delete)
             db.session.commit()
             flash("Post delete success")
-            delete_blog_img(post_to_delete.picture_v)
-            delete_blog_img(post_to_delete.picture_h)
-            delete_blog_img(post_to_delete.picture_s)
-            if post_was_approved:
-                update_approved_post_stats(Blog_Posts, -1)
-            if current_user.type == "author":
+            stat_helper().post_stats()
+            if current_user.role.name == "AUTHOR":
                 return redirect(url_for('dashboard.posts_table_author'))
-            else:
+            elif current_user.role.name == "ADMIN":
                 return redirect(url_for('dashboard.posts_table'))
-        except Exception:
+            else:
+                abort(403)
+        except Exception as e:
             db.session.rollback()
             flash("Error Deleting Post")
-            current_app.logger.info(f"Error Deleting Post {id}")
-            if current_user.type == "author":
+            current_app.logger.info(f"Error Deleting Post {id}: {e}")
+            if current_user.role.name == "AUTHOR":
                 return redirect(url_for('dashboard.posts_table_author'))
-            else:
+            elif current_user.role.name == "ADMIN":
                 return redirect(url_for('dashboard.posts_table'))
+            else:
+                abort(403)
     return render_template(
-        "dashboard/posts_delete_post.html", 
-        logged_in=current_user.is_authenticated, 
+        "dashboard/posts_delete_post.html",
         post_to_delete=Blog_Posts.query.get_or_404(id))
-
-
-    if request.method == "POST":
-        try:
-            # delete likes associated
-            for like in post_likes:
-                db.session.delete(like)
-
-            # delete comments and replies associated
-            for comment in comments:
-                replies = Blog_Replies.query.filter_by(comment_id=comment.id).all()
-                for reply in replies:
-                    db.session.delete(reply)
-                db.session.delete(comment)
-
-            # delete bookmarks associated
-            bookmarks = Blog_Bookmarks.query.filter_by(post_id=id).all()
-            for bookmark in bookmarks:
-                db.session.delete(bookmark)
-            
-            # delete the post and commit
-            if post_to_delete.admin_approved == "TRUE":
-                post_was_approved = True
-            db.session.delete(post_to_delete)
-            db.session.commit()
-
-            # delete pictures associated
-            delete_blog_img(post_to_delete.picture_v)
-            delete_blog_img(post_to_delete.picture_h)
-            delete_blog_img(post_to_delete.picture_s)
-
-            # update stats
-            if post_was_approved:
-                update_approved_post_stats(-1)
-
-            flash("Post deleted successfully.")
-            if current_user.type == "author":
-                return redirect(url_for('dashboard.posts_table_author'))
-            else:
-                return redirect(url_for('dashboard.posts_table'))
-        except:
-            db.session.rollback()
-            flash("There was a problem deleting this post and associated data.")
-            if current_user.type == "author":
-                return redirect(url_for('dashboard.posts_table_author'))
-            else:
-                return redirect(url_for('dashboard.posts_table'))
-    else:
-        return render_template("dashboard/posts_delete_post.html", logged_in=current_user.is_authenticated, post_to_delete=post_to_delete, post_likes=post_likes, comments=comments)

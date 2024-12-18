@@ -14,8 +14,8 @@
         <div class="row no-gutters ALL-box-preview-shadow" style="width: 57rem;">
             <div class="col-md-6 card-img ALL-picture ">
                 <img 
-                {% if post_to_delete.picture_h %}
-                src="{{ url_for('static', filename='Pictures_Posts/'+post_to_delete.picture_h) }}" 
+                {% if post_to_delete.picture_source %}
+                src="{{ post_to_delete.picture_source }}" 
                 {% else %}
                 src="{{ url_for('static', filename='Pictures_Posts/Picture_not_available.png') }}" 
                 {% endif %}

@@ -5,10 +5,7 @@ from app.models import Blog_Theme, Blog_Contact, Blog_Posts, Blog_Stats, Blog_Us
 from flask_login import current_user
 from datetime import datetime
 from sqlalchemy import desc
-
-website = Blueprint('website', __name__,
-                    static_folder="../static", template_folder="../template")
-
+from . import website
 
 # Blog website pages: Home Page, All posts, About, Contact page
 # Routes available for registered and non-registered users alike

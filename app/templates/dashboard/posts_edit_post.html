@@ -1,4 +1,4 @@
-{% if current_user.type == "admin" or current_user.type == "super_admin"%}
+{% if current_user.role.name == "ADMIN" %}
     {% extends "account/dashboard_admin.html" %}
 {% else %}
     {% extends "account/dashboard_author.html" %}
@@ -15,7 +15,7 @@
             {{form.theme.label (class="form-label")}}
             {{form.theme (class="form-control")}}
             <br>
-            {% if current_user.type == "super_admin" %}
+            {% if current_user.role.name == "ADMIN" %}
             {{form.author.label (class="form-label")}}
             {{form.author (class="form-control")}}
             <br>
