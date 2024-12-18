@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from datetime import datetime, date
 from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
+import hashlib
 
 Column = db.Column
 relationship = db.Relationship
@@ -161,6 +162,20 @@ class Blog_User(UserMixin, db.Model):
 
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def gravatar_hash(self):
+                """
+                Creates gravatar from a third party
+                """
+                return hashlib.md5(self.email.lower().encode('utf-8')).hexdigest()
+                
+    def gravatar(self, size=100, default = 'identicon', rating='g'):
+            """
+            Sets user gravatar
+            """
+            url = "https://secure.gravatar.com/avatar"
+            hash = self.gravatar_hash()
+            return f"{url}/{hash}?&s={size}&d={default}&r={rating}"
     
     def __repr__(self):
         return f"<User: {self.id} {self.name} {self.email}>"
