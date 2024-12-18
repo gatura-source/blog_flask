@@ -1,19 +1,22 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, current_app
+from flask import (render_template, request, redirect,
+                   flash, url_for, current_app)
 from app.extensions import db, login_manager
-from app.models import Blog_Contact, Blog_Posts, Blog_Stats, Blog_Theme, Blog_User
+from app.models import (Blog_Posts, Blog_Theme,
+                        Blog_User, Role, Blog_Stats)
 from app.account.forms import The_Accounts
-from app.helpers import  update_stats_users_total, update_stats_users_active, change_authorship_of_all_post
+from app.helpers import (
+    change_authorship_of_all_post, stat_helper)
 from app.general_helpers.helpers import check_image_filename
 from flask_login import login_user, login_required, current_user, logout_user
 from werkzeug.security import check_password_hash  # used in login
 from werkzeug.utils import secure_filename
 from sqlalchemy import desc
-from datetime import datetime
+from datetime import datetime, date
 import uuid as uuid
 import os
 from ..dashboard.helpers import admin_required
+from . import account
 
-account = Blueprint('account', __name__)
 
 # Pages: login, logout, signup, account
 # Routes available for all registered users (all user types) + login and signup (available for all registered and non-registered users)
@@ -94,11 +97,28 @@ def hello():
 @account.route('/dashboard')
 @login_required
 def dashboard():
-    if current_user.type == 
-    current_stats = Blog_Stats.query.all()
-    posts_pending_approval = Blog_Posts.query.filter_by(
-        admin_approved=False).all()
-    return render_template('account/dashboard_admin_dash.html', name=current_user.name, logged_in=True, posts_pending_approval=posts_pending_approval, current_stats=current_stats)
+    match current_user.role.name:
+        case ("USER"):
+            posts = Blog_Posts.query.filter(
+                Blog_Posts.admin_approved == True,
+                Blog_Posts.date_to_post <= datetime.utcnow()
+            ).order_by(desc(Blog_Posts.date_to_post)).limit(3)
+            return render_template('account/dashboard_user.html', posts=posts)
+        case ("AUTHOR"):
+            posts_pending_admin = Blog_Posts.query.filter(
+                Blog_Posts.author_id == current_user.id,
+                Blog_Posts.admin_approved == False
+            ).all()
+            return render_template('account/dashboard_author_dash.html',
+                                   posts_pending_admin=posts_pending_admin)
+        case ("ADMIN"):
+            stats = Blog_Stats.query.all()[-1]
+            posts_pending_approval = Blog_Posts.query.filter(
+                Blog_Posts.admin_approved == False
+            ).all()
+            return render_template('account/dashboard_admin_dash.html',
+                                   posts_pending_approval=posts_pending_approval,
+                                   current_stats=stats)
 
 # ***********************************************************************************************
 # OWN ACCOUNT MANAGEMENT, BOOKMARKS, HISTORY

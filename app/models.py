@@ -1,7 +1,7 @@
 from app.extensions import db
 from datetime import datetime
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, date
 from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -173,12 +173,59 @@ class Blog_Stats(db.Model):
     __tablename__ = "blog_stats"
     id = db.Column(db.Integer, primary_key=True)
     user_total = db.Column(db.Integer, default=0)
+    user_blocked = db.Column(db.Integer, default=0)
     user_active_total = db.Column(db.Integer, default=0)
     posts_approved = db.Column(db.Integer, default=0)
+    posts_pending_approval = db.Column(db.Integer, default=0)
+    posts_total = db.Column(db.Integer, default=0)
+    timestamp = db.Column(db.Date, default=date.today())
 
+
+    def __init__(self, **kwargs):
+        super(Blog_Stats, self).__init__(**kwargs)
+        self.timestamp = date.today()
+
+    
+    def user_stats(self):
+        active_users = len(
+            Blog_User.query.filter(
+                Blog_User.is_authenticated == True,
+                Blog_User.blocked == False
+            ).all()
+        )
+        blocked_users = len(
+            Blog_User.query.filter(
+                Blog_User.blocked == True
+            ).all()
+        )
+        total_users = len(
+            Blog_User.query.all()
+        )
+        self.user_total = total_users
+        self.user_blocked = blocked_users
+        self.user_active_total = active_users
+        db.session.commit()
+
+
+    def post_stats(self):
+        active_posts = len(
+            Blog_Posts.query.filter(
+                Blog_Posts.admin_approved == True
+            ).all()
+        )
+        pending_approval = len(
+            Blog_Posts.query.filter(
+                Blog_Posts.admin_approved == False
+            ).all()
+        )
+        all_posts = len(Blog_Posts.query.all())
+        self.posts_approved = active_posts
+        self.posts_pending_approval = pending_approval
+        self.posts_total = all_posts
+        db.session.commit()
 
     def __repr__(self):
-        return f"<Comment {self.id}: {self.text}>"
+        return f"<Stat {self.id} >"
     
 
 

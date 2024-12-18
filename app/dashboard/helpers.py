@@ -17,6 +17,7 @@ def admin_required():
         return decorated_func
     return decorated
 
+
 def author_required():
     def decorated(f):
         @wraps(f)

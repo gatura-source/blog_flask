@@ -2,8 +2,7 @@ from app.models import (Blog_Contact, Blog_Posts, Blog_Stats, Blog_Theme,
                         Blog_User, Role)
 from app.extensions import db
 from app.dummie_data import authors, posts, themes
-from app.helpers import (update_approved_post_stats, update_stats_users_active,
-                         update_stats_users_total)
+from app.helpers import stat_helper
 from faker import Faker
 
 fake = Faker()
@@ -105,9 +104,8 @@ def create_dummie_accts():
             user.about = fake.paragraph()
             user.picture = authors.authors_data[2]["picture"]
             db.session.add(user)
-            update_stats_users_active(Blog_User, 1)
         db.session.commit()
-        update_stats_users_total(Blog_User)
+        stat_helper().user_stats()
         print("Dummy Users Created")
 
 
@@ -133,8 +131,7 @@ def create_posts():
 
             db.session.commit()
 
-            update_approved_post_stats(Blog_Posts, 1)
-        
+    stat_helper().post_stats()
     print("Posts created")
 
 

@@ -1,32 +1,30 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, current_app, abort
+from flask import (Blueprint, render_template, request, redirect,
+                   flash, url_for, current_app, abort)
 from app.extensions import db
-from app.models import Blog_Posts, Blog_User, Blog_Theme, Role
+from app.models import (Blog_Posts, Blog_User,
+                        Blog_Theme, Role)
 from app.dashboard.forms import The_Posts
-from app.dashboard.helpers import admin_required, author_required
-from app.helpers import (update_stats_users_active, update_approved_post_stats,
-                         change_authorship_of_all_post)
+from app.dashboard.helpers import (admin_required, author_required)
+from app.helpers import (change_authorship_of_all_post, 
+                         stat_helper)
 from datetime import datetime
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 import os
+from . import dashboard
 
-dashboard = Blueprint('dashboard', __name__)
 
-# Pages: dashboard, etc
-# Routes available for all registered users of types admin and author
-
-# ***********************************************************************************************
-# USER MANAGEMENT: admin access only
-# Managing users: see all users
 @dashboard.route("/dashboard/manage_users", methods=["GET", "POST"])
 @login_required
 @admin_required()
 def users_table():
     all_blog_users = Blog_User.query.order_by(Blog_User.id)
-    return render_template("dashboard/users_table.html", all_blog_users=all_blog_users)
+    return render_template("dashboard/users_table.html",
+                           all_blog_users=all_blog_users)
 
-# Managing users: update user
-@dashboard.route("/dashboard/manage_users/update/<int:id>", methods=["GET", "POST"])
+
+@dashboard.route("/dashboard/manage_users/update/<int:id>",
+                 methods=["GET", "POST"])
 @login_required
 @admin_required()
 def user_update(id):
@@ -35,12 +33,24 @@ def user_update(id):
     user_to_update = Blog_User.query.get_or_404(id)
 
     if request.method == "POST":
-        if Blog_User.query.filter(Blog_User.id != id, Blog_User.email == request.form.get("email_update")).first():
+        if Blog_User.query.filter(Blog_User.id != id,
+                                  Blog_User.email == request.form.get("email_update")).first():
             flash("Email Invalid.")
-            return render_template("dashboard/users_user_update.html", id=user_to_update.id, logged_in=current_user.is_authenticated, user_to_update=user_to_update, acct_types=acct_types, acct_blocked=acct_blocked)
-        elif Blog_User.query.filter(Blog_User.id != id, Blog_User.name == request.form.get("username_update")).first():
+            return render_template("dashboard/users_user_update.html",
+                                   id=user_to_update.id,
+                                   logged_in=current_user.is_authenticated,
+                                   user_to_update=user_to_update,
+                                   acct_types=acct_types,
+                                   acct_blocked=acct_blocked)
+        elif Blog_User.query.filter(Blog_User.id != id,
+                                    Blog_User.name == request.form.get("username_update")).first():
             flash("This username is already registered with us.")
-            return render_template("dashboard/users_user_update.html", id=user_to_update.id, logged_in=current_user.is_authenticated, user_to_update=user_to_update, acct_types=acct_types, acct_blocked=acct_blocked)
+            return render_template("dashboard/users_user_update.html",
+                                   id=user_to_update.id,
+                                   logged_in=current_user.is_authenticated,
+                                   user_to_update=user_to_update,
+                                   acct_types=acct_types,
+                                   acct_blocked=acct_blocked)
         else:
             # if the user to being updated is of type author, if type is updated, posts have to pass to default author first.
             if user_to_update.role.name == "AUTHOR":
@@ -56,10 +66,11 @@ def user_update(id):
             try:
                 db.session.commit()
                 flash("User updated successfully!")
-                # no time for flash, change way of displaying success
+                stat_helper().user_stats()
                 return redirect(url_for('dashboard.users_table'))
-            except:
+            except Exception as e:
                 db.session.rollback()
+                current_app.logger.error(f"Error updating user: {user_to_update.id}: {e}")
                 flash("Error, try again.")
                 return render_template("dashboard/users_user_update.html", id=user_to_update.id, logged_in=current_user.is_authenticated, user_to_update=user_to_update, acct_types=acct_types, acct_blocked=acct_blocked)
     else:
@@ -84,7 +95,7 @@ def user_delete(id):
             db.session.delete(user_to_delete)
             db.session.commit()
             flash("User deleted successfully.")
-            update_stats_users_active(Blog_User, -1)
+            stat_helper().user_stats()
             return redirect(url_for('dashboard.users_table'))
         except Exception as e:
             db.session.rollback()
@@ -107,6 +118,7 @@ def user_block(id):
         try:
             user_to_block.blocked = True
             db.session.commit()
+            stat_helper().user_stats()
             flash("User blocked successfully.")
             return redirect(url_for('dashboard.users_table'))
         except Exception as e:
@@ -129,6 +141,7 @@ def user_unblock(id):
         try:
             user_to_block.blocked = False
             db.session.commit()
+            stat_helper().user_stats()
             flash("User unblocked successfully.")
             return redirect(url_for('dashboard.users_table'))
         except Exception as e:
@@ -160,129 +173,42 @@ def submit_post():
     form = The_Posts(obj=themes_list)
     form.theme.choices = themes_list
 
-    # if request.method == "POST":
-    if form.validate_on_submit():
-        author = current_user.id
-        
-        # get all information from the form with the exeption of the blog post pictures
-        # this will enable the saving of the information even if there is an error with the picture upload: 
-        post = Blog_Posts(theme_id=form.theme.data,
-                            date_to_post=form.date.data, title=form.title.data, intro=form.intro.data,
-                            body=form.body.data, picture_v_source=form.picture_v_source.data, picture_h_source=form.picture_h_source.data,
-                            picture_s_source=form.picture_s_source.data,
-                            picture_alt=form.picture_alt.data, meta_tag=form.meta_tag.data, title_tag=form.title_tag.data,
-                            author_id=author)
-        
-        # add form information to database without the pictures:
-        try:
-            db.session.add(post)
-            db.session.commit()
-        except:
-            flash("Oops, error saving your blog post, check all fields and try again.")
-            db.session.rollback()
+    if request.method == "POST":
+        if form.validate_on_submit():
+            post = Blog_Posts()
+            post.theme_id = form.theme.data
+            post.author_id = current_user.id
+            post.body = form.body.data
+            post.title = form.title.data
+            post.intro = form.intro.data
+            post.date_to_post = form.date.data
+            post.title_tag = form.title_tag.data
+            post.meta_tag = form.meta_tag.data
+            post.picture_source= form.picture_source.data
+            post.picture_alt = form.picture_alt.data
+            try:
+                db.session.add(post)
+                db.session.commit()
+                flash("Post add Success")
+                stat_helper().post_stats()
+                return redirect(url_for('account.dashboard'))
 
-        # checking images: one image at a time
-        the_post_id = post.id
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f"Error Saving Post {post} to db: {e}")
+                flash("Error saving your blog post, check all fields and try again.")
+                return redirect(url_for('account.dashboard'))
 
-        submit_post_blog_img_provided = dict(v = False, h = False, s = False)
-        submit_post_blog_img_status = dict(v=False, h=False, s=False)
+    return render_template("dashboard/posts_submit_new.html", form=form)
 
-        def submit_post_blog_img_handle (img_filename, img_format):
-            accepted_img_format = ["v", "h", "s"]
-            if img_format not in accepted_img_format:
-                raise NameError(
-                    "submit_post_blog_img_handle function was supplied an invalid img_format")
-            new_img_name = check_blog_picture(
-                the_post_id, img_filename, img_format)
-            if new_img_name:
-                new_img_format = "picture_" + img_format
-                the_img = request.files[new_img_format]
-                try:
-                    the_img.save(os.path.join(
-                        current_app.config["BLOG_IMG_FOLDER"], new_img_name))
-                    if img_format == "v":
-                        post.picture_v = new_img_name
-                    elif img_format == "h":
-                        post.picture_h = new_img_name
-                    else:
-                        post.picture_s = new_img_name
-                    db.session.commit()
-                    submit_post_blog_img_status[img_format] = True
-                except:
-                    submit_post_blog_img_status[img_format] = False
 
-        # checking picture vertical:
-        if form.picture_v.data and int(form.picture_v_size.data) < 1500000:
-            img_v_filename = secure_filename(form.picture_v.data.filename)
-            submit_post_blog_img_handle(img_v_filename, "v")
-            submit_post_blog_img_provided["v"] = True
-        else:
-            submit_post_blog_img_provided["v"] = False
-
-        # checking picture horizontal:
-        if form.picture_h.data and int(form.picture_h_size.data) < 1500000:
-            img_h_filename = secure_filename(form.picture_h.data.filename)
-            submit_post_blog_img_handle(img_h_filename, "h")
-            submit_post_blog_img_provided["h"] = True
-        else:
-            submit_post_blog_img_provided["h"] = False
-
-        # checking picture squared:
-        if form.picture_s.data and int(form.picture_s_size.data) < 1500000:
-            img_s_filename = secure_filename(form.picture_s.data.filename)
-            submit_post_blog_img_handle(img_s_filename, "s")
-            submit_post_blog_img_provided["s"] = True
-        else:
-            submit_post_blog_img_provided["s"] = False
-
-        # inform the user of the status of the post
-        submit_post_blog_missing_pic = False
-        submit_post_blog_status_pic = False
-
-        for key in submit_post_blog_img_provided:
-            if submit_post_blog_img_provided[key] == False:
-                submit_post_blog_missing_pic = True
-        
-        for key in submit_post_blog_img_provided:
-            if submit_post_blog_img_status[key] == False:
-                submit_post_blog_status_pic = True
-
-        if submit_post_blog_missing_pic == True and submit_post_blog_status_pic == True:
-            flash("Blog post submitted successfully, but one or more pictures were missing and at least one couldn't be downloaded.")
-        elif submit_post_blog_missing_pic == True:
-            flash("Blog post submitted successfully, but one or more pictures were missing.")
-        elif submit_post_blog_status_pic == True:
-            flash("Blog post submitted successfully, but one or more pictures couldn't be downloaded.")
-        else:
-            flash("Blog post submitted successfully!")
-
-        # clear form:
-        form.theme.data = ""
-        form.date.data = datetime.now
-        form.title.data = ""
-        form.intro.data = ""
-        form.body.data = ""
-        form.picture_v.data = ""
-        form.picture_v_source.data = ""
-        form.picture_h.data = ""
-        form.picture_h_source.data = ""
-        form.picture_s.data = ""
-        form.picture_s_source.data = ""
-        form.picture_alt.data = ""
-        form.meta_tag.data = ""
-        form.title_tag.data = ""
-
-        return redirect(url_for('account.dashboard'))
-
-    return render_template("dashboard/posts_submit_new.html", logged_in=current_user.is_authenticated, form=form)
-
-# POST MANGEMENT -  ADMIN
-# View table with all posts and manage posts: Admin only
 @dashboard.route("/dashboard/manage_posts")
+@admin_required()
 @login_required
 def posts_table():
     all_blog_posts_submitted = Blog_Posts.query.order_by(Blog_Posts.id)
-    return render_template("dashboard/posts_table.html", logged_in=current_user.is_authenticated, all_blog_posts_submitted=all_blog_posts_submitted)
+    return render_template("dashboard/posts_table.html", 
+                           all_blog_posts_submitted=all_blog_posts_submitted)
 
 # Approve posts: only users of type admin can approve posts
 # Approved posts are published on the blog
@@ -297,14 +223,14 @@ def approve_post(id):
         try:
             db.session.commit()
             flash("This post has been admin approved.")
-            update_approved_post_stats(Blog_Posts, 1)
+            stat_helper().post_stats()
             return redirect(url_for('dashboard.posts_table'))
         except:
             flash("There was a problem approving this post.")
             db.session.rollback()
-            return render_template("dashboard/posts_approve_post.html", logged_in=current_user.is_authenticated, post_to_approve=post_to_approve)
+            return render_template("dashboard/posts_approve_post.html", post_to_approve=post_to_approve)
     else:
-        return render_template("dashboard/posts_approve_post.html", logged_in=current_user.is_authenticated, post_to_approve=post_to_approve)
+        return render_template("dashboard/posts_approve_post.html", post_to_approve=post_to_approve)
 
 # Disapprove (disallow) posts: only user accounts of type admin can disapprove a post
 # Disapproving a post will unpublish it from the blog
@@ -318,14 +244,14 @@ def disallow_post(id):
         try:
             db.session.commit()
             flash("This post is no longer admin approved.")
-            update_approved_post_stats(Blog_Posts, -1)
+            stat_helper().post_stats()
             return redirect(url_for('dashboard.posts_table'))
         except:
             flash("There was a problem disallowing this post.")
             db.session.rollback()
-            return render_template("dashboard/posts_disallow_post.html", logged_in=current_user.is_authenticated, post_to_disallow=post_to_disallow)
+            return render_template("dashboard/posts_disallow_post.html", post_to_disallow=post_to_disallow)
     else:
-        return render_template("dashboard/posts_disallow_post.html", logged_in=current_user.is_authenticated, post_to_disallow=post_to_disallow)
+        return render_template("dashboard/posts_disallow_post.html",  post_to_disallow=post_to_disallow)
 
 # POST MANAGEMENT - AUTHORS DASH
 # View table with all posts this author has submitted
@@ -362,7 +288,7 @@ def edit_post(id):
         post_to_edit.title = form.title.data
         post_to_edit.intro = form.intro.data
         post_to_edit.body = form.body.data
-        post_to_edit.picture_source = form.picture_v_source.data
+        post_to_edit.picture_source = form.picture_source.data
         post_to_edit.picture_alt = form.picture_alt.data
         post_to_edit.meta_tag = form.meta_tag.data
         post_to_edit.title_tag = form.title_tag.data
