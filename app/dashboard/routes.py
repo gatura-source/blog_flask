@@ -28,6 +28,7 @@ def users_table():
 # Managing users: update user
 @dashboard.route("/dashboard/manage_users/update/<int:id>", methods=["GET", "POST"])
 @login_required
+@admin_required()
 def user_update(id):
     acct_types = [role.name for role in Role.query.all() ]
     acct_blocked = {"False": False, "True": True}
@@ -153,6 +154,7 @@ def user_preview(id):
 # Only users of type authors can add new posts
 @dashboard.route("/dashboard/submit_new_post", methods=["GET", "POST"])
 @login_required
+@author_required()
 def submit_post():
     themes_list = [(u.id, u.theme) for u in db.session.query(Blog_Theme).all()]
     form = The_Posts(obj=themes_list)
