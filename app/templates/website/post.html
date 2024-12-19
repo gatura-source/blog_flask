@@ -3,16 +3,15 @@
 {% block meta %}
 <meta name="description" content="less - Blog Post">
 {% endblock %}
-
-{% block title %}{{blog_posts['title']}}{% endblock %}
+{% block title %}{{blog_posts.title}}{% endblock %}
 
 {% block content %}
-
+{% if blog_posts %}
     <!-- Content -->
     <section class="mb-3 container-fluid">
         <div class="row justify-content-center">
             <div class="col-lg-8 col-md-10">
-                <p class="ALL-special-font ALL-h1 text-center" style="margin-bottom: -20px;">in {{blog_posts.theme_group.theme}}</p>
+                <!-- <p class="ALL-h2 text-center" style="margin-bottom: -20px;">in {{blog_posts.theme_group.theme}}</p> -->
             </div>
             <div class="col-lg-8 col-md-10">
                 <h1 class="text-center">{{blog_posts.title}}</h1>
@@ -78,14 +77,14 @@
         <div class="row justify-content-center">
             <div class="row no-gutters col-12 .col-md-10" style="max-width: 57rem; ">
                 <div class="col-3 card-img ALL-picture">
-                    <img src="{{blog_posts.picture_source}}" class="card-img" style="border-radius: 10%;"
+                    <img src="{{blog_posts.author.gravatar()}}" class="card-img" style="border-radius: 10%;"
                         alt="{{ blog_posts.author.name }}">
                 </div>
                 <div class="col-9">
                     <div class="card-body">
-                        <p class="card-text"><small class="text-muted">ABOUT THE AUTHOR</small></p>
+                        <!-- <p class="card-text"><small class="text-muted">ABOUT THE AUTHOR</small></p> -->
                         <h5 class="card-title">{{ blog_posts.author.name }}</h5>
-                        <p class="card-text">{{current_user.about}}</p>
+                        <!-- <p class="card-text">{{blog_posts.author.about}}</p> -->
                     </div>
                 </div>
             </div>
@@ -102,6 +101,10 @@
         </div>
     </section>
 
-    
+{% else %}
+<p class="ALL-special-font ALL-h1 text-center">
+    Content Goes Here
+</p>
+{% endif %}
 
 {% endblock %}

@@ -9,33 +9,8 @@
 <!-- Content -->
 
 
-<!-- <section class="mb-3 container-fluid">
-        {% if latest_bookmarks != None %}
-        {% for bookmark in latest_bookmarks%}
-        <div class="row justify-content-center">
-            <div class="row no-gutters" style="width: 57rem;">
-                <div class="col-md-3 card-img ALL-picture ">
-                    <img src="{{ url_for('static', filename='Pictures_Posts/'+bookmark.post.picture_h) }}" class="card-img"
-                        alt="{{ bookmark.post.picture_alt }}">
-                </div>
-                <div class="col-md-9">
-                    <div class="card-body">
-                        <h4 class="card-title">{{ bookmark.post.title }}</h4>
-                        <p class="card-text"><small class="text-muted"> by {{ bookmark.post.author.name }} - {{
-                                bookmark.post.date_to_post.strftime('%d %B %Y') }}</small></p>
-                        <a role="button" href="{{ url_for('website.blog_post', index=bookmark.post.id) }}" class="btn ALL-green-btn mb-2"
-                            style="width: 150px;">Read</a>
-                        
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-        {% else %}
-        <p class="text-center">You have not bookmarked any posts yet.</p>
-        {% endif %}
-    
-</section> -->
+
+                   
 <br>
 <h2 class="mb-3 text-center">The latest blog posts we selected for you!</h2>
 <section class="mb-3 container-fluid">
@@ -44,7 +19,7 @@
         <a class="ALL-no-hover" href="{{ url_for('website.blog_post', index=post.id) }}">
             <div class="col col-auto mb-3">
                 <div class="card h-100 HOME-card ALL-post-hover" style="width: 18rem; height: 380px !important;" >
-                    <img src="{{ url_for('static', filename='Pictures_Posts/'+post.picture_h) }}" class="card-img-top" alt="{{ post.picture_alt }}" />
+                    <img src="{{ post.picture_source }}" class="card-img-top" alt="{{ post.picture_alt }}" />
                     <div class="card-body">
                         <h5 class="card-title ALL-no-hover">{{ post.title }}</h5>
                     </div>

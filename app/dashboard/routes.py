@@ -216,6 +216,7 @@ def posts_table():
 
 @dashboard.route("/dashboard/manage_posts/approve_post/<int:id>", methods=["GET", "POST"])
 @login_required
+@admin_required()
 def approve_post(id):
     post_to_approve = Blog_Posts.query.get_or_404(id)
     if request.method == "POST":
@@ -237,6 +238,7 @@ def approve_post(id):
 # This action will be reflected in the blog stats of active posts
 @dashboard.route("/dashboard/manage_posts/disallow_post/<int:id>", methods=["GET", "POST"])
 @login_required
+@admin_required()
 def disallow_post(id):
     post_to_disallow = Blog_Posts.query.get_or_404(id)
     if request.method == "POST":
@@ -257,6 +259,7 @@ def disallow_post(id):
 # View table with all posts this author has submitted
 @dashboard.route("/dashboard/manage_posts_author")
 @login_required
+@author_required()
 def posts_table_author():
     all_blog_posts_submitted = Blog_Posts.query.filter(
         Blog_Posts.author_id == current_user.id).all()
@@ -270,6 +273,9 @@ def posts_table_author():
 @login_required
 def preview_post(id):
     post_to_preview = Blog_Posts.query.get_or_404(id)
+    if not (current_user.role == Role.query.filter_by(name="ADMIN").first()
+            or current_user == post_to_preview.author):
+        abort(403)
     return render_template("dashboard/posts_preview_post.html", logged_in=current_user.is_authenticated, post_to_preview=post_to_preview)
 
 # Editing a post - ADMIN AND AUTHORS
@@ -279,7 +285,8 @@ def preview_post(id):
 @login_required
 def edit_post(id):
     post_to_edit = Blog_Posts.query.get_or_404(id)
-    if current_user != post_to_edit:
+    if not (current_user == post_to_edit.author or 
+            current_user.role == Role.query.filter_by(name="ADMIN").first()):
         abort(403)
     themes_list = [(u.id, u.theme) for u in db.session.query(Blog_Theme).all()]
     form = The_Posts(obj=themes_list)
@@ -330,7 +337,8 @@ def delete_post(id, methods=['POST']):
     if request.method == 'POST':
         try:
             post_to_delete = Blog_Posts.query.get_or_404(id)
-            if post_to_delete.author != current_user:
+            if not (current_user.role == Role.query.filter_by(name="ADMIN").first()
+                    or current_user == post_to_delete.author):
                 abort(403)
             db.session.delete(post_to_delete)
             db.session.commit()

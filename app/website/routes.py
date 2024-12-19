@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, make_response, current_app
 from app.extensions import db
 from app.website.contact import send_email
-from app.models import Blog_Theme, Blog_Contact, Blog_Posts, Blog_Stats, Blog_User
+from app.models import (Blog_Theme, Blog_Contact, Blog_Posts, Blog_Stats, Blog_User, Role)
 from flask_login import current_user
 from datetime import datetime
 from sqlalchemy import desc
@@ -12,29 +12,21 @@ from . import website
 
 @website.route("/")
 def home():
-    # query database for themes while getting picture src
-    posts_themes = [(u.theme, u.picture, u.id)
-                    for u in db.session.query(Blog_Theme).all()]
-    theme_list = [t[2] for t in posts_themes]
+    post_themes = Blog_Theme.query.all()
+    all_posts = {}
+    for theme in post_themes:
+        all_posts[theme] = []
+    for theme in all_posts.keys():
+        for post in Blog_Posts.query.filter(
+            Blog_Posts.admin_approved == True,
+        ).all():
+            if post.theme_id == theme.id:
+                all_posts[theme].append(post)
+    for theme in post_themes:
+        all_posts[theme] = all_posts[theme][:1]
+    current_app.logger.info(f"themes: {post_themes}: posts: {all_posts}")
     
-    # query posts to get the latest 3 posts of each theme. 
-    # Important note: the code bellow is not maintainable if we increase the number of themes, but I could not achieve a better result on my own.
-    # This should be improved.
-    # The code also selects the forth theme's query results' ids to identify these posts, as this is the only group of posts displayed separately in index.html
-    posts_all = []
-    forth_theme_post_ids = []
-    for num_themes in theme_list:
-        query = db.session.query(Blog_Posts).filter(
-                Blog_Posts.admin_approved == True, Blog_Posts.date_to_post <= datetime.utcnow(),
-            Blog_Posts.theme_id == num_themes).order_by(desc(Blog_Posts.date_to_post)).limit(3)
-        posts_all.append(query.all())
-        if num_themes == 4:
-            for this_query in query:
-                forth_theme_post_ids.append(this_query.id)
-    if len(posts_all) != 0:
-        posts_all = posts_all[0] + posts_all[1] + posts_all[2] + posts_all[3]
-
-    return render_template('website/index.html', posts_all=posts_all, posts_themes=posts_themes, logged_in=current_user.is_authenticated, forth_theme_post_ids=forth_theme_post_ids)
+    return render_template('website/index.html', themes=post_themes, all_posts=all_posts)
 
 # route to 'All Posts' page or page by chosen theme
 @website.route("/all/<int:index>")
@@ -64,11 +56,14 @@ def all(index):
 
 @website.route("/about/")
 def about():
-    authors_all = db.session.query(Blog_User).filter(
-        Blog_User.blocked == False, Blog_User.type == "author",
-        ).order_by(desc(Blog_User.id)).limit(25)
-    return render_template('website/about.html', authors_all=authors_all, logged_in=current_user.is_authenticated)
-
+    authors = Blog_User.query.filter(
+        Blog_User.blocked == False,
+        Blog_User.role == Role.query.filter_by(name="AUTHOR").first()
+    ).order_by(
+        desc(Blog_User.id)
+    ).limit(25)
+    return render_template('website/about.html', authors_all=authors)
+    
 @website.route("/contact/", methods=['POST', 'GET'])
 def contact():
     if request.method == "POST":

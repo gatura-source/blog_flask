@@ -1,8 +1,8 @@
 from flask import (render_template, request, redirect,
-                   flash, url_for, current_app)
+                   flash, url_for, current_app, abort)
 from app.extensions import db, login_manager
 from app.models import (Blog_Posts, Blog_Theme,
-                        Blog_User, Role, Blog_Stats)
+                        Blog_User, Role, Blog_Stats, Blog_Contact)
 from app.account.forms import The_Accounts
 from app.helpers import (
     change_authorship_of_all_post, stat_helper)
@@ -39,13 +39,12 @@ def signup():
         new_user = Blog_User(
             name=request.form.get("username"),
             email=request.form.get("email"),
-            password=hash_pw(request.form.get("password")),
-            type="user"
+            password=(request.form.get("password")),
         )
+        new_user.role = Role.query.filter_by(name="USER").first()
         db.session.add(new_user)
         db.session.commit()
-        update_stats_users_total(Blog_User)
-        update_stats_users_active(Blog_User, 1)
+        stat_helper().user_stats()
 
         login_user(new_user)
 
@@ -89,14 +88,11 @@ def login():
 # ***********************************************************************************************
 # DASHBOARDs
 # displaying user dashboard after log-in according to the account type: user, author, or admin
-@account.route('/hello')
-@login_required
-def hello():
-    return f"Hello World - {current_user.type}"
-
 @account.route('/dashboard')
 @login_required
 def dashboard():
+    if current_user.role is None:
+        abort(403)
     match current_user.role.name:
         case ("USER"):
             posts = Blog_Posts.query.filter(
@@ -113,12 +109,14 @@ def dashboard():
                                    posts_pending_admin=posts_pending_admin)
         case ("ADMIN"):
             stats = Blog_Stats.query.all()[-1]
-            posts_pending_approval = Blog_Posts.query.filter(
+            posts_app = Blog_Posts.query.filter(
                 Blog_Posts.admin_approved == False
             ).all()
             return render_template('account/dashboard_admin_dash.html',
-                                   posts_pending_approval=posts_pending_approval,
+                                   posts_pending_approval=posts_app,
                                    current_stats=stats)
+        case (_):
+            abort(403)
 
 # ***********************************************************************************************
 # OWN ACCOUNT MANAGEMENT, BOOKMARKS, HISTORY
@@ -220,22 +218,11 @@ def delete_own_acct(id):
                 # if user is author, transfer the authorship of the posts to the default author
                 if user_at_hand.type == "author":
                     change_authorship_of_all_post(Blog_User, user_at_hand.id, 2)
-                
-                # delete user's picture
-                if user_at_hand.picture == "" or user_at_hand.picture == "Picture_default.jpg":
-                    profile_picture = None
-                else:
-                    profile_picture = user_at_hand.picture
-
-                if profile_picture != None and os.path.exists(os.path.join(current_app.config["PROFILE_IMG_FOLDER"], profile_picture)):
-                    os.remove(os.path.join(
-                        current_app.config["PROFILE_IMG_FOLDER"], profile_picture))
-                    
                 # delete user
                 db.session.delete(user_at_hand)
                 db.session.commit()
                 flash("Your account was deleted successfully.")
-                update_stats_users_active(Blog_User, -1)
+                stat_helper().user_stats()
                 return redirect(url_for("website.home"))
             except:
                 flash("There was a problem deleting your account.")
@@ -249,7 +236,8 @@ def delete_own_acct(id):
 # User can see their comments and replies the comment received.
 @account.route("/dashboard/inbox", methods=["GET", "POST"])
 @login_required
+@admin_required()
 def inbox():
-
-    return render_template("account/inbox.html",)
+    user_comments = Blog_Contact.query.all()
+    return render_template("account/inbox.html", user_comments=user_comments)
 
