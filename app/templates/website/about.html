@@ -4,12 +4,12 @@
 <meta name="description" content="About less is more">
 {% endblock %}
 
-{% block title %}Travel blog - About{% endblock %}
+{% block title %}About Me{% endblock %}
 
 {% block content %}
 
     <!-- Content -->
-    <h1 class="ALL-special-font ALL-h1 text-center">About the Authors</h1>
+    <h1 class="ALL-h1 text-center">About the Authors</h1>
 
     <!-- Cards: Culture (missing piece)-->
     {% for author in authors_all: %}
@@ -17,8 +17,7 @@
         <div class="row justify-content-center">
             <div class="row no-gutters" style="width: 57rem;">
                 <div class="col-md-6 card-img ALL-picture ">
-                    <img src="{{ url_for('static', filename='Pictures_Users/'+author.picture) }}" class="card-img "
-                        alt="author">
+                    <img src="{{author.gravatar(size=240)}}" class="" alt="author"/>
                 </div>
                 <div class="col-md-6">
                     <div class="card-body">
