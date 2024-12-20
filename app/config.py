@@ -1,13 +1,13 @@
 import os
 from dotenv import load_dotenv  # getting .env variables
 from datetime import timedelta
-
+from secrets import token_urlsafe()
 load_dotenv()
 base_path = os.path.abspath(os.getcwd())
 
 class Config:
     SUPER_USER = os.getenv("SUPERUSER") 
-    SECRET_KEY = "myFlaskApp4Fun"  # needed for login with wtforms
+    SECRET_KEY = token_urlsafe(128)
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(base_path, os.getenv('DBNAME'))}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TEMPLATES_AUTO_RELOAD = True
