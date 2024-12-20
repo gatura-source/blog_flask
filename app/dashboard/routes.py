@@ -1,16 +1,13 @@
-from flask import (Blueprint, render_template, request, redirect,
+from flask import (render_template, request, redirect,
                    flash, url_for, current_app, abort)
 from app.extensions import db
 from app.models import (Blog_Posts, Blog_User,
                         Blog_Theme, Role)
 from app.dashboard.forms import The_Posts
 from app.dashboard.helpers import (admin_required, author_required)
-from app.helpers import (change_authorship_of_all_post, 
+from app.helpers import (change_authorship_of_all_post,
                          stat_helper)
-from datetime import datetime
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
-import os
 from . import dashboard
 
 
@@ -28,7 +25,7 @@ def users_table():
 @login_required
 @admin_required()
 def user_update(id):
-    acct_types = [role.name for role in Role.query.all() ]
+    acct_types = [role.name for role in Role.query.all()]
     acct_blocked = {"False": False, "True": True}
     user_to_update = Blog_User.query.get_or_404(id)
 
@@ -38,7 +35,6 @@ def user_update(id):
             flash("Email Invalid.")
             return render_template("dashboard/users_user_update.html",
                                    id=user_to_update.id,
-                                   logged_in=current_user.is_authenticated,
                                    user_to_update=user_to_update,
                                    acct_types=acct_types,
                                    acct_blocked=acct_blocked)
@@ -47,12 +43,10 @@ def user_update(id):
             flash("This username is already registered with us.")
             return render_template("dashboard/users_user_update.html",
                                    id=user_to_update.id,
-                                   logged_in=current_user.is_authenticated,
                                    user_to_update=user_to_update,
                                    acct_types=acct_types,
                                    acct_blocked=acct_blocked)
         else:
-            # if the user to being updated is of type author, if type is updated, posts have to pass to default author first.
             if user_to_update.role.name == "AUTHOR":
                 if request.form.get("accttype_update") != Role.query.filter_by(name="AUTHOR").first():
                     change_authorship_of_all_post(Blog_User, user_to_update.id, 2)
@@ -70,11 +64,19 @@ def user_update(id):
                 return redirect(url_for('dashboard.users_table'))
             except Exception as e:
                 db.session.rollback()
-                current_app.logger.error(f"Error updating user: {user_to_update.id}: {e}")
+                current_app.logger.error(
+                    f"Error updating user: {user_to_update.id}: {e}")
                 flash("Error, try again.")
-                return render_template("dashboard/users_user_update.html", id=user_to_update.id, logged_in=current_user.is_authenticated, user_to_update=user_to_update, acct_types=acct_types, acct_blocked=acct_blocked)
+                return render_template("dashboard/users_user_update.html",
+                                       id=user_to_update.id,
+                                       user_to_update=user_to_update,
+                                       acct_types=acct_types,
+                                       acct_blocked=acct_blocked)
     else:
-        return render_template("dashboard/users_user_update.html", logged_in=current_user.is_authenticated, user_to_update=user_to_update, acct_types=acct_types, acct_blocked=acct_blocked)
+        return render_template("dashboard/users_user_update.html",
+                               user_to_update=user_to_update,
+                               acct_types=acct_types,
+                               acct_blocked=acct_blocked)
 
 
 # Deleting user
@@ -89,7 +91,7 @@ def user_delete(id):
         try:
             # if user is author, transfer the authorship of the posts to the default author
             if user_to_delete.role.name == "AUTHOR":
-                change_authorship_of_all_post(Blog_user, user_to_delete.id, 2)
+                change_authorship_of_all_post(Blog_User, user_to_delete.id, 2)
 
             # delete user
             db.session.delete(user_to_delete)
@@ -101,8 +103,10 @@ def user_delete(id):
             db.session.rollback()
             current_app.logger.error(f"Error deleting user {user_to_delete.id}: {e}")
             flash("There was a problem deleting this user.")
-            return render_template("dashboard/users_user_delete.html", logged_in=current_user.is_authenticated, user_to_delete=user_to_delete)
-    return render_template("dashboard/users_user_delete.html", logged_in=current_user.is_authenticated, user_to_delete=user_to_delete)
+            return render_template("dashboard/users_user_delete.html",
+                                   user_to_delete=user_to_delete)
+    return render_template("dashboard/users_user_delete.html",
+                           user_to_delete=user_to_delete)
 
 # Blocking user
 # Blocking a user will not influence the stats of total active users.
@@ -125,9 +129,11 @@ def user_block(id):
             db.session.rollback()
             current_app.logger.error(f"Error blocking user {user_to_block.id}: {e}")
             flash("There was a problem blocking this user.")
-            return render_template("dashboard/users_user_block.html", logged_in=current_user.is_authenticated, user_to_block=user_to_block)
+            return render_template("dashboard/users_user_block.html",
+                                   user_to_block=user_to_block)
     else:
-        return render_template("dashboard/users_user_block.html", logged_in=current_user.is_authenticated, user_to_block=user_to_block)
+        return render_template("dashboard/users_user_block.html",
+                               user_to_block=user_to_block)
 
 
 @dashboard.route("/dashboard/manage_users/unblock/<int:id>", methods=["GET", "POST"])
@@ -148,23 +154,23 @@ def user_unblock(id):
             db.session.rollback()
             current_app.logger.error(f"Error unblocking user {user_to_block.id}: {e}")
             flash("There was a problem unblocking this user.")
-            return render_template("dashboard/users_user_unblock.html", logged_in=current_user.is_authenticated, user_to_block=user_to_block)
+            return render_template("dashboard/users_user_unblock.html",
+                                   user_to_block=user_to_block)
     else:
-        return render_template("dashboard/users_user_unblock.html", logged_in=current_user.is_authenticated, user_to_block=user_to_block)
-    
+        return render_template("dashboard/users_user_unblock.html",
+                               user_to_block=user_to_block)
 # Previewing a user's account information
+
+
 @dashboard.route("/dashboard/manage_users/preview/<int:id>")
 @login_required
 @admin_required()
 def user_preview(id):
     user_to_preview = Blog_User.query.get_or_404(id)
-    return render_template("dashboard/users_user_preview.html", logged_in=current_user.is_authenticated, user_to_preview=user_to_preview)
+    return render_template("dashboard/users_user_preview.html",
+                           user_to_preview=user_to_preview)
 
-# ***********************************************************************************************
-# POST MANGEMENT
 
-# ADDING NEW BLOG POST -  AUTHORS ONLY
-# Only users of type authors can add new posts
 @dashboard.route("/dashboard/submit_new_post", methods=["GET", "POST"])
 @login_required
 @author_required()
@@ -184,7 +190,7 @@ def submit_post():
             post.date_to_post = form.date.data
             post.title_tag = form.title_tag.data
             post.meta_tag = form.meta_tag.data
-            post.picture_source= form.picture_source.data
+            post.picture_source = form.picture_source.data
             post.picture_alt = form.picture_alt.data
             try:
                 db.session.add(post)
@@ -207,12 +213,9 @@ def submit_post():
 @login_required
 def posts_table():
     all_blog_posts_submitted = Blog_Posts.query.order_by(Blog_Posts.id)
-    return render_template("dashboard/posts_table.html", 
+    return render_template("dashboard/posts_table.html",
                            all_blog_posts_submitted=all_blog_posts_submitted)
 
-# Approve posts: only users of type admin can approve posts
-# Approved posts are published on the blog
-# When a post is approved, this will count towards active posts in the blog statictics.
 
 @dashboard.route("/dashboard/manage_posts/approve_post/<int:id>", methods=["GET", "POST"])
 @login_required
@@ -226,16 +229,18 @@ def approve_post(id):
             flash("This post has been admin approved.")
             stat_helper().post_stats()
             return redirect(url_for('dashboard.posts_table'))
-        except:
+        except Exception as e:
+            current_app.logger.error(
+                f"Error approving post {post_to_approve.id}: {e}")
             flash("There was a problem approving this post.")
             db.session.rollback()
-            return render_template("dashboard/posts_approve_post.html", post_to_approve=post_to_approve)
+            return render_template("dashboard/posts_approve_post.html",
+                                   post_to_approve=post_to_approve)
     else:
-        return render_template("dashboard/posts_approve_post.html", post_to_approve=post_to_approve)
+        return render_template("dashboard/posts_approve_post.html",
+                               post_to_approve=post_to_approve)
 
-# Disapprove (disallow) posts: only user accounts of type admin can disapprove a post
-# Disapproving a post will unpublish it from the blog
-# This action will be reflected in the blog stats of active posts
+
 @dashboard.route("/dashboard/manage_posts/disallow_post/<int:id>", methods=["GET", "POST"])
 @login_required
 @admin_required()
@@ -248,27 +253,31 @@ def disallow_post(id):
             flash("This post is no longer admin approved.")
             stat_helper().post_stats()
             return redirect(url_for('dashboard.posts_table'))
-        except:
+        except Exception as e:
+            current_app.logger.error(
+                f"Error disallowinf post {post_to_disallow.id}: {e}")
             flash("There was a problem disallowing this post.")
             db.session.rollback()
-            return render_template("dashboard/posts_disallow_post.html", post_to_disallow=post_to_disallow)
+            return render_template("dashboard/posts_disallow_post.html",
+                                   post_to_disallow=post_to_disallow)
     else:
-        return render_template("dashboard/posts_disallow_post.html",  post_to_disallow=post_to_disallow)
+        return render_template("dashboard/posts_disallow_post.html",
+                               post_to_disallow=post_to_disallow)
 
-# POST MANAGEMENT - AUTHORS DASH
-# View table with all posts this author has submitted
+
 @dashboard.route("/dashboard/manage_posts_author")
 @login_required
 @author_required()
 def posts_table_author():
     all_blog_posts_submitted = Blog_Posts.query.filter(
         Blog_Posts.author_id == current_user.id).all()
-    return render_template("dashboard/posts_table_author.html", logged_in=current_user.is_authenticated, all_blog_posts_submitted=all_blog_posts_submitted)
+    return render_template("dashboard/posts_table_author.html",
+                           logged_in=current_user.is_authenticated,
+                           all_blog_posts_submitted=all_blog_posts_submitted)
 
 
-# POST MANGEMENT -  ADMIN AND AUTHORS
-# Previewing a post
-@dashboard.route("/dashboard/manage_posts_author/preview_post/<int:id>", endpoint='preview_post_author')
+@dashboard.route("/dashboard/manage_posts_author/preview_post/<int:id>",
+                 endpoint='preview_post_author')
 @dashboard.route("/dashboard/manage_posts/preview_post/<int:id>")
 @login_required
 def preview_post(id):
@@ -276,22 +285,25 @@ def preview_post(id):
     if not (current_user.role == Role.query.filter_by(name="ADMIN").first()
             or current_user == post_to_preview.author):
         abort(403)
-    return render_template("dashboard/posts_preview_post.html", logged_in=current_user.is_authenticated, post_to_preview=post_to_preview)
+    return render_template("dashboard/posts_preview_post.html",
+                           logged_in=current_user.is_authenticated,
+                           post_to_preview=post_to_preview)
 
-# Editing a post - ADMIN AND AUTHORS
-#make authors as a list
-@dashboard.route("/dashboard/manage_posts_author/edit_post/<int:id>", endpoint='edit_post_author', methods=["GET", "POST"])
-@dashboard.route("/dashboard/manage_posts/edit_post/<int:id>", methods=["GET", "POST"])
+
+@dashboard.route("/dashboard/manage_posts_author/edit_post/<int:id>",
+                 endpoint='edit_post_author', methods=["GET", "POST"])
+@dashboard.route("/dashboard/manage_posts/edit_post/<int:id>",
+                 methods=["GET", "POST"])
 @login_required
 def edit_post(id):
     post_to_edit = Blog_Posts.query.get_or_404(id)
-    if not (current_user == post_to_edit.author or 
+    if not (current_user == post_to_edit.author or
             current_user.role == Role.query.filter_by(name="ADMIN").first()):
         abort(403)
     themes_list = [(u.id, u.theme) for u in db.session.query(Blog_Theme).all()]
     form = The_Posts(obj=themes_list)
     form.theme.choices = themes_list
-    if request.method == "POST" :
+    if request.method == "POST":
         if form.validate_on_submit():
             post_to_edit.theme_id = form.theme.data
             post_to_edit.date_to_post = form.date.data
@@ -326,12 +338,15 @@ def edit_post(id):
     form.picture_alt.data = post_to_edit.picture_alt
     form.meta_tag.data = post_to_edit.meta_tag
     form.title_tag.data = post_to_edit.title_tag
-    return render_template('dashboard/posts_edit_post.html', logged_in=current_user.is_authenticated, form=form, post_to_edit=post_to_edit)   
-        
-    
-# Deleting a post 
-@dashboard.route("/dashboard/manage_posts_author/delete_post/<int:id>", endpoint='delete_post_author', methods=["GET", "POST"])
-@dashboard.route("/dashboard/manage_posts/delete_post/<int:id>", methods=["GET", "POST"])
+    return render_template('dashboard/posts_edit_post.html',
+                           form=form,
+                           post_to_edit=post_to_edit)
+
+
+@dashboard.route("/dashboard/manage_posts_author/delete_post/<int:id>",
+                 endpoint='delete_post_author', methods=["GET", "POST"])
+@dashboard.route("/dashboard/manage_posts/delete_post/<int:id>",
+                 methods=["GET", "POST"])
 @login_required
 def delete_post(id, methods=['POST']):
     if request.method == 'POST':
