@@ -13,19 +13,30 @@
 <p class="text-center">Contact Messages</p>
 <br>
 <section class="mb-3 container-fluid">
-
-    {% if users_comments %}
-    {% for comment in users_comments %}
-    
-    <h1 class="text-center"><b> Name: {{ comment.name }}</b></h1>
-    <p class="text-dark">Email: {{comment.email}}</p>
-    <p class="text-center"> {{comment.message}}</p>
-    {% endfor %}
-    
+    {% if contacts %}
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comment in contacts %}
+            <tr>
+                <td>{{ comment.name }}</td>
+                <td>{{ comment.email }}</td>
+                <td>{{ comment.message }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% else %}
-    <p class="text-center">No contacts.</p>
+    <p class="text-center">No contacts available.</p>
     {% endif %}
 </section>
+
 
 </div>
 

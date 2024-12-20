@@ -209,3 +209,9 @@ input[type=file]::file-selector-button {
         filter: invert(12%) sepia(57%) saturate(5140%) hue-rotate(4deg) brightness(92%) contrast(101%);
     }
 }
+.fixed-size-img {
+    width: 150px; /* Set the desired width */
+    height: 150px; /* Set the desired height */
+    object-fit: cover; /* Ensures images fill the dimensions without distortion */
+    border-radius: 8px; /* Optional: Rounds the corners */
+}

@@ -19,10 +19,10 @@
     {% for post in all_blog_posts: %}
     {% set i = i + 1 %}
     <section class="container-fluid mt-4">
-        <div class="row justify-content-center">
+        <div class="row justify-content-left">
             <div class="row no-gutters" style="width: 57rem;">
                 <div class="col-md-6 card-img ALL-picture ">
-                    <img src="{{post.picture_source}}" class="card-img"
+                    <img src="{{post.picture_source}}" class="card-img fixed-size-img"
                         alt="{{ post.picture_alt }}">
                 </div>
                 <div class="col-md-6">

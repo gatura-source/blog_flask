@@ -31,15 +31,16 @@
         </div>
     </section>
 
-    <!-- Cards: Theme -->
-     {% for theme in all_posts.keys() %}
+    <!-- Cards: Theme --> 
+    
+    {% for theme in all_posts.keys() %}
     <section class="container-fluid mt-4">
         <div class="row justify-content-center">
             {% for post in all_posts[theme] %}
             <div class="col col-auto mb-3 HOME-theme-btn">
                 <a class="ALL-no-hover" href="{{ url_for('website.blog_post', index=post.id, _external=True) }}">
                     <div class="card h-100 HOME-card ALL-post-hover" style="width: 18rem;">
-                        <img src="{{post.picture_source}}" class="card-img-top HOME-round-img" alt="{{ post.picture_alt }}" />
+                        <img src="{{post.picture_source}}" class="card-img-top HOME-round-img fixed-size-img" alt="{{ post.picture_alt }}" />
                         <div class="card-body">
                             <h5 class="card-title ALL-no-hover">{{ post.title }}</h5>
                         </div>

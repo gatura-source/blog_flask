@@ -153,50 +153,6 @@ def update_own_acct_info(id):
     form.about.data = user_at_hand.about
     return render_template("account/account_mgmt_update.html",  form=form)
 
-# Update account information: changing the picture
-@account.route("/dashboard/manage_account/update_picture/<int:id>", methods=["GET", "POST"])
-@login_required
-def update_own_acct_picture(id):
-    form = The_Accounts()
-    user_at_hand = Blog_User.query.get_or_404(id)
-    if user_at_hand.picture == "" or user_at_hand.picture == "Picture_default.jpg":
-        profile_picture = None
-    else:
-        profile_picture = user_at_hand.picture
-
-    if request.method == "POST":
-        if form.picture.data:
-            # get name from image file:
-            pic_filename = secure_filename(form.picture.data.filename)
-
-            # check if extension is allowed:
-            if not check_image_filename(pic_filename):
-                flash("Sorry, this image extension is not allowed.")
-                return redirect(url_for('account.update_own_acct_picture', id=id))
-
-            # insert a unique id to the filename to make sure there arent two pictures with the same name:
-            pic_filename_unique = str(uuid.uuid1()) + "_" + pic_filename
-            user_at_hand.picture = pic_filename_unique
-
-            # get the new image
-            the_img_file = request.files['picture']
-        try:
-            # save the img to folder and path to user
-            the_img_file.save(os.path.join(
-                current_app.config["PROFILE_IMG_FOLDER"], pic_filename_unique))
-            # delete the old picture from folder
-            if profile_picture != None and os.path.exists(os.path.join(current_app.config["PROFILE_IMG_FOLDER"], profile_picture)):
-                os.remove(os.path.join(
-                    current_app.config["PROFILE_IMG_FOLDER"], profile_picture))
-
-            db.session.commit()
-            flash("Picture updated successfully!")
-            return redirect(url_for('account.manage_acct'))
-        except:
-            flash("Oops, error updating profile picture, try again.")
-            return redirect(url_for('account.manage_acct'))
-
-    return render_template("account/account_mgmt_picture.html", form=form, profile_picture=profile_picture)
 
 
 # Delete account
@@ -234,10 +190,10 @@ def delete_own_acct(id):
 
 # INBOX
 # User can see their comments and replies the comment received.
-@account.route("/dashboard/inbox", methods=["GET", "POST"])
+@account.route("/dashboard/inbox", methods=["GET"])
 @login_required
 @admin_required()
 def inbox():
-    user_comments = Blog_Contact.query.all()
-    return render_template("account/inbox.html", user_comments=user_comments)
+    contacts = Blog_Contact.query.all()
+    return render_template("account/inbox.html", contacts=contacts)
 

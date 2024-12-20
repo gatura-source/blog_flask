@@ -61,7 +61,9 @@
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                         <a class="dropdown-item" href="{{ url_for('account.dashboard')}}">Dashboard</a>
                         <a class="dropdown-item" href="{{ url_for('account.manage_acct') }}">Account</a>
+                        {% if current_user.role.name == "ADMIN" %}
                         <a class="dropdown-item" href="{{ url_for('account.inbox') }}">Inbox</a>
+                        {% endif %}
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{{ url_for('account.logout') }}"><b>Log out</b></a>
                     </div>
