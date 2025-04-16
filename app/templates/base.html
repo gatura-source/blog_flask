@@ -2,133 +2,591 @@
 <html lang="en">
 
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     {% block meta %}{% endblock %}
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=La+Belle+Aurore&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #14b8a6;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --background: #ffffff;
+            --background-alt: #f8fafc;
+            --border: #e2e8f0;
+            --accent: #f43f5e;
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--background-alt);
+            line-height: 1.7;
+        }
+        
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+        }
+        
+        /* Header */
+        .blog-header {
+            background-color: var(--background);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
-        integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
-    <link rel="stylesheet" href="/../static/CSS/styles.css">
+        .blog-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--text-dark);
+            font-weight: 700;
+            text-decoration: none;
+        }
+        
+        .blog-brand:hover {
+            color: var(--primary);
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            color: var(--text-light);
+            margin: 0 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary);
+            background-color: rgba(79, 70, 229, 0.06);
+        }
+        
+        /* Featured Section */
+        .featured-post {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            height: 450px;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .featured-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+            padding: 2rem;
+            color: white;
+        }
+        
+        /* Post Cards */
+        .post-card {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            background-color: var(--background);
+        }
+        
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .post-img-top {
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .post-category {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        
+        .post-title {
+            font-size: 1.3rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+        
+        .post-meta {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .post-meta i {
+            margin-right: 0.25rem;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: sticky;
+            top: 90px;
+        }
+        
+        .sidebar-title {
+            font-size: 1.2rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--primary);
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+        
+        .sidebar-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .sidebar-list li {
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .sidebar-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .tag-cloud .btn {
+            margin: 0.25rem;
+            font-size: 0.8rem;
+            padding: 0.25rem 0.75rem;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            color: var(--text-light);
+            border-radius: 50px;
+            transition: all 0.2s ease;
+        }
+        
+        .tag-cloud .btn:hover {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* Newsletter */
+        .newsletter {
+            background-color: var(--primary);
+            color: white;
+            border-radius: 12px;
+            padding: 2rem;
+        }
+        
+        /* Authentication Buttons */
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            border-radius: 4px;
+            padding: 0.5rem 1.25rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+            border-radius: 4px;
+            padding: 0.5rem 1.25rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        /* User Avatar */
+        .avatar-img {
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        /* Dropdown */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+        }
+        
+        .dropdown-item {
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+        }
+        
+        .dropdown-item:hover {
+            background-color: rgba(79, 70, 229, 0.06);
+            color: var(--primary);
+        }
+        
+        /* Footer */
+        .blog-footer {
+            background-color: var(--background);
+            border-top: 1px solid var(--border);
+            padding: 3rem 0;
+            margin-top: 4rem;
+        }
+        
+        .footer-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+        
+        .social-icons a {
+            color: var(--text-light);
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            transition: color 0.2s ease;
+        }
+        
+        .social-icons a:hover {
+            color: var(--primary);
+        }
+        
+        /* Alerts */
+        .alert {
+            border-radius: 8px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Pagination */
+        .pagination .page-item .page-link {
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+            margin: 0 3px;
+            border-radius: 4px;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        /* Hide elements with this class */
+        .All-display-none {
+            display: none;
+        }
+    </style>
+    
     <title>{% block title %}{% endblock %}</title>
 </head>
 
 <body>
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-light HOME-nav">
-        <a class="navbar-brand" href="{{url_for('website.home')}}">Pound of Less</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('website.all', index=0) }}">All Posts</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/about">About</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/contact">Contact</a>
-                </li>
-            </ul>
-            <ul class="navbar-nav my-2 my-lg-0">
-                {% if not current_user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link btn mr-1 ALL-green-btn-dark" style="width: 80px;" href="{{ url_for('account.login') }}"><b>Log in</b></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link btn ALL-green-btn" style="width: 80px;" href="{{ url_for('account.signup') }}"><b>Sign up</b></a>
-                </li>
-                {% else %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false">
-                        <img src="{{current_user.gravatar()}}" class="rounded-circle mr-1" height="20"
-                            alt="User" loading="lazy" />
-                        {{ current_user.name }} 
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="{{ url_for('account.dashboard')}}">Dashboard</a>
-                        <a class="dropdown-item" href="{{ url_for('account.manage_acct') }}">Account</a>
-                        {% if current_user.role.name == "ADMIN" %}
-                        <a class="dropdown-item" href="{{ url_for('account.inbox') }}">Inbox</a>
-                        {% endif %}
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="{{ url_for('account.logout') }}"><b>Log out</b></a>
+    <!-- Header -->
+    <header class="blog-header py-3">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-4 col-md-3">
+                    <a href="{{url_for('website.home')}}" class="blog-brand">Pound of Less</a>
+                </div>
+                <div class="col-8 col-md-6">
+                    <nav class="nav d-flex justify-content-end justify-content-md-center">
+                        <a class="nav-link" href="/"><i class="fas fa-home fa-sm me-1"></i>Home</a>
+                        <a class="nav-link" href="{{ url_for('website.all', index=0) }}"><i class="fas fa-book fa-sm me-1"></i>Articles</a>
+                        <a class="nav-link" href="/about"><i class="fas fa-info-circle fa-sm me-1"></i>About</a>
+                        <a class="nav-link" href="/contact"><i class="fas fa-envelope fa-sm me-1"></i>Contact</a>
+                    </nav>
+                </div>
+                <div class="col-md-3 d-none d-md-block text-end">
+                    {% if not current_user.is_authenticated %}
+                    <a class="btn btn-outline-primary me-2" href="{{ url_for('account.login') }}">Log in</a>
+                    <a class="btn btn-primary" href="{{ url_for('account.signup') }}">Sign up</a>
+                    {% else %}
+                    <div class="dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center justify-content-end" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <img src="{{current_user.gravatar()}}" class="rounded-circle avatar-img me-2" height="30"
+                                alt="User" loading="lazy" />
+                            <span>{{ current_user.name }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('account.dashboard')}}"><i class="fas fa-tachometer-alt fa-sm me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('account.manage_acct') }}"><i class="fas fa-user-cog fa-sm me-2"></i>Account</a></li>
+                            {% if current_user.role.name == "ADMIN" %}
+                            <li><a class="dropdown-item" href="{{ url_for('account.inbox') }}"><i class="fas fa-inbox fa-sm me-2"></i>Inbox</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('account.logout') }}"><i class="fas fa-sign-out-alt fa-sm me-2"></i>Log out</a></li>
+                        </ul>
                     </div>
-                </li>
-                {% endif %}
-            </ul>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-    </nav>
-    <!-- Flash alert messages -->
-    {% for category, message in get_flashed_messages(with_categories=true) %}
-    {% if message.category %}
-    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+    </header>
+    
+    <!-- Mobile Auth Menu -->
+    <div class="container my-2 d-block d-md-none">
+        <div class="d-flex justify-content-center">
+            {% if not current_user.is_authenticated %}
+            <a class="btn btn-outline-primary me-2" href="{{ url_for('account.login') }}">Log in</a>
+            <a class="btn btn-primary" href="{{ url_for('account.signup') }}">Sign up</a>
+            {% else %}
+            <div class="dropdown">
+                <a class="btn btn-outline-primary dropdown-toggle d-flex align-items-center" href="#" id="mobileNavbarDropdown" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <img src="{{current_user.gravatar()}}" class="rounded-circle avatar-img me-2" height="24"
+                        alt="User" loading="lazy" />
+                    <span>{{ current_user.name }}</span>
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="mobileNavbarDropdown">
+                    <li><a class="dropdown-item" href="{{ url_for('account.dashboard')}}"><i class="fas fa-tachometer-alt fa-sm me-2"></i>Dashboard</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('account.manage_acct') }}"><i class="fas fa-user-cog fa-sm me-2"></i>Account</a></li>
+                    {% if current_user.role.name == "ADMIN" %}
+                    <li><a class="dropdown-item" href="{{ url_for('account.inbox') }}"><i class="fas fa-inbox fa-sm me-2"></i>Inbox</a></li>
+                    {% endif %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ url_for('account.logout') }}"><i class="fas fa-sign-out-alt fa-sm me-2"></i>Log out</a></li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% else %}
-    <div class="alert alert-secondary alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+
+    <div class="container mt-4">
+        <!-- Flash alert messages -->
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+        {% if message.category %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% else %}
+        <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+        {% endfor %}
+        
+        <!-- JS alert messages -->
+        <div id="alertMsgJs" class="alert alert-secondary alert-dismissible fade show All-display-none" role="alert">
+            <span></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Featured Post (for home page) -->
+        {% block featured %}{% endblock %}
+
+        <!-- Main Content -->
+        <div class="row g-5 mt-2">
+            <!-- Content Area -->
+            <div class="col-lg-8">
+                {% block content %}{% endblock %}
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="sidebar">
+                    <!-- Search -->
+                    <div class="mb-4">
+                        <form class="d-flex">
+                            <input class="form-control me-2" type="search" placeholder="Search articles..." aria-label="Search">
+                            <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+                        </form>
+                    </div>
+                    
+                    <!-- About Widget -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="sidebar-title">About</h5>
+                            <p class="text-muted">Pound of Less is a blog dedicated to mindful living, minimalism, and sustainable choices that benefit our planet.</p>
+                            <a href="/about" class="btn btn-outline-primary btn-sm">Learn More</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Categories Widget -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="sidebar-title">Categories</h5>
+                            <ul class="sidebar-list">
+                                <li><a href="#" class="text-decoration-none">Minimalism</a> <span class="badge bg-secondary float-end">14</span></li>
+                                <li><a href="#" class="text-decoration-none">Sustainability</a> <span class="badge bg-secondary float-end">8</span></li>
+                                <li><a href="#" class="text-decoration-none">Mental Health</a> <span class="badge bg-secondary float-end">6</span></li>
+                                <li><a href="#" class="text-decoration-none">Zero Waste</a> <span class="badge bg-secondary float-end">4</span></li>
+                                <li><a href="#" class="text-decoration-none">Tiny Living</a> <span class="badge bg-secondary float-end">3</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Popular Posts Widget -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="sidebar-title">Popular Posts</h5>
+                            <div class="row mb-3">
+                                <div class="col-4">
+                                    <img src="/api/placeholder/80/80" class="img-fluid rounded" alt="Post thumbnail">
+                                </div>
+                                <div class="col-8">
+                                    <a href="#" class="text-decoration-none"><h6 class="mb-1">10 Ways to Reduce Your Carbon Footprint</h6></a>
+                                    <small class="text-muted">April 14, 2024</small>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-4">
+                                    <img src="/api/placeholder/80/80" class="img-fluid rounded" alt="Post thumbnail">
+                                </div>
+                                <div class="col-8">
+                                    <a href="#" class="text-decoration-none"><h6 class="mb-1">Minimalist Home Organization Tips</h6></a>
+                                    <small class="text-muted">April 10, 2024</small>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4">
+                                    <img src="/api/placeholder/80/80" class="img-fluid rounded" alt="Post thumbnail">
+                                </div>
+                                <div class="col-8">
+                                    <a href="#" class="text-decoration-none"><h6 class="mb-1">The Joy of Living with Less</h6></a>
+                                    <small class="text-muted">April 5, 2024</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tags Widget -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="sidebar-title">Tags</h5>
+                            <div class="tag-cloud">
+                                <a href="#" class="btn">minimalism</a>
+                                <a href="#" class="btn">sustainable</a>
+                                <a href="#" class="btn">eco-friendly</a>
+                                <a href="#" class="btn">zero-waste</a>
+                                <a href="#" class="btn">simple-living</a>
+                                <a href="#" class="btn">mindfulness</a>
+                                <a href="#" class="btn">green</a>
+                                <a href="#" class="btn">declutter</a>
+                                <a href="#" class="btn">wellness</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Newsletter Widget -->
+                    <div class="newsletter mb-4">
+                        <h5 class="mb-3">Subscribe to Our Newsletter</h5>
+                        <p class="text-white opacity-75">Get the latest posts and tips delivered straight to your inbox.</p>
+                        <form>
+                            <div class="mb-3">
+                                <input type="email" class="form-control" placeholder="Your email address">
+                            </div>
+                            <button type="submit" class="btn btn-light w-100">Subscribe</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    {% endif %}
-    {% endfor %}
-    <!-- JS alert messages -->
-    <div id="alertMsgJs" class="alert alert-secondary alert-dismissible fade show All-display-none" role="alert">
-        <span></span>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
 
-<!-- Content -->
-{% block content %}
-{% endblock %}
+    <!-- Footer -->
+    <footer class="blog-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="footer-title">Pound of Less</h5>
+                    <p class="text-muted">A blog about simplifying life, minimalism, and sustainable living. Finding joy in less and making choices that matter.</p>
+                    <div class="social-icons mt-3">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h5 class="h6 mb-3">Quick Links</h5>
+                    <ul class="footer-links">
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/about">About</a></li>
+                        <li><a href="{{ url_for('website.all', index=0) }}">Articles</a></li>
+                        <li><a href="/contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h5 class="h6 mb-3">Categories</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">Minimalism</a></li>
+                        <li><a href="#">Sustainability</a></li>
+                        <li><a href="#">Mental Health</a></li>
+                        <li><a href="#">Zero Waste</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="h6 mb-3">About the Author</h5>
+                    <p class="text-muted">Sharing insights on minimalist living and sustainability practices. Join me on this journey toward a more intentional life.</p>
+                    <a href="/about" class="btn btn-outline-primary btn-sm mt-2">Learn More</a>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="text-muted mb-0">&copy; 2024 Pound of Less. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted mb-0">Crafted with <i class="fas fa-heart text-danger"></i> by <a href="https://github.com/gatura-source" class="text-decoration-none">Gatura</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-<!-- Footer -->
-<footer class=" text-center text-lg-start HOME-footer">
-    <p class="text-center">
-        &copy; 2024 Copyright:
-        <a class="text-dark" href="https://github.com/gatura-source">Gatura</a>
-    </p>
-</footer>
-
-<!-- Optional JavaScript; choose one of the two! -->
-
-<!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-    crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
-    crossorigin="anonymous"></script>
-<script src="{{ url_for('static', filename='/JS/app.js') }}">
-
-</script>
-
-
-<!-- Option 2: jQuery, Popper.js, and Bootstrap JS
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>
-    -->
+    <!-- Bootstrap 5 Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='/JS/app.js') }}"></script>
 </body>
 
 </html>

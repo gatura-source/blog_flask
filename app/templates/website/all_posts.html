@@ -1,41 +1,140 @@
 {% extends "base.html" %}
 
 {% block meta %}
-<meta name="description" content="less - All Posts">
+<meta name="description" content="Pound of Less - Browse all our articles on minimalism and sustainable living">
 {% endblock %}
-{% block title %}Posts{% endblock %}
+
+{% block title %}
+{% if chosen_theme == "" %}
+All Articles - Pound of Less
+{% else %}
+{{chosen_theme}} - Pound of Less
+{% endif %}
+{% endblock %}
+
+{% block featured %}
+<!-- Category Header Banner -->
+<div class="featured-post" style="background-image: url('/api/placeholder/1200/400'); height: 300px;">
+    <div class="featured-overlay">
+        {% if chosen_theme == "" %}
+        <h1 class="display-4 fw-bold mb-2">All Articles</h1>
+        <p class="lead mb-0">Explore our collection of ideas, insights, and inspiration on minimalist living.</p>
+        {% else %}
+        <h1 class="display-4 fw-bold mb-2">{{chosen_theme}}</h1>
+        <p class="lead mb-0">Explore our articles about {{chosen_theme | lower}} and discover new perspectives.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
 
 {% block content %}
+<!-- Theme Navigation -->
+<div class="mb-4">
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('website.all', index=0) }}" class="btn {% if chosen_theme == '' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            All Posts
+        </a>
+        {% for theme in themes %}
+        <a href="{{ url_for('website.all', index=theme.id) }}" class="btn {% if chosen_theme == theme.theme %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            {{ theme.theme }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
 
-    <!-- Content -->
-    {% if chosen_theme == "": %}
-    <h1 class="ALL-h1 text-center">All Blog Posts</h1>
-    {% else: %}
-    <h1 class="ALL-h1 text-center">{{chosen_theme}}: Blog Posts</h1>
-    {% endif %}
-
-    <!-- Cards: all posts-->
+<!-- All Posts Listing -->
+<div class="posts-container">
     {% set i = 0 %}
-    {% for post in all_blog_posts: %}
+    {% for post in all_blog_posts %}
     {% set i = i + 1 %}
-    <section class="container-fluid mt-4">
-        <div class="row justify-content-left">
-            <div class="row no-gutters" style="width: 57rem;">
-                <div class="col-md-6 card-img ALL-picture ">
-                    <img src="{{post.picture_source}}" class="card-img fixed-size-img"
-                        alt="{{ post.picture_alt }}">
-                </div>
-                <div class="col-md-6">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ post.title }}</h5>
-                        <p class="card-text text-justify">{{ intros[i] }}</p>
-                        <a role="button" href="{{ url_for('website.blog_post', index=post.id) }}" class="btn ALL-green-btn mb-2" style="width: 150px;">Read</a>
-                        <p class="card-text"><small class="text-muted"> by {{ post.author.name }} - {{ post.date_to_post.strftime('%d %B %Y') }}</small></p>
+    <article class="card mb-4 post-card">
+        <div class="row g-0">
+            <div class="col-md-5">
+                <div class="h-100" style="background: url('{{post.picture_source}}') center/cover no-repeat; min-height: 250px;"></div>
+            </div>
+            <div class="col-md-7">
+                <div class="card-body d-flex flex-column h-100">
+                    {% if post.theme %}
+                    <span class="post-category mb-2">{{ post.theme }}</span>
+                    {% endif %}
+                    <h2 class="post-title">{{ post.title }}</h2>
+                    <p class="card-text flex-grow-1">{{ intros[i] }}</p>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="post-meta">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-circle me-1"></i>
+                                    <span>{{ post.author.name }}</span>
+                                </div>
+                                <div class="d-flex align-items-center mt-1">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    <span>{{ post.date_to_post.strftime('%d %B %Y') }}</span>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('website.blog_post', index=post.id) }}" class="btn btn-primary">
+                                Read Article <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </article>
     {% endfor %}
+    
+    {% if all_blog_posts|length == 0 %}
+    <div class="text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <h3>No articles found</h3>
+        <p class="text-muted">We couldn't find any articles in this category. Please check back later or explore other topics.</p>
+    </div>
+    {% endif %}
 
+    <!-- Pagination -->
+     {% set pages = 5 %}
+     {% set current_page = 2 %}
+    {% if pages > 1 %}
+    <nav aria-label="Page navigation" class="my-5">
+        <ul class="pagination justify-content-center">
+            {% if current_page > 1 %}
+            <li class="page-item">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for i in range(1, pages+1) %}
+            <li class="page-item {% if current_page == i %}active{% endif %}">
+            </li>
+            {% endfor %}
+            
+            {% if current_page < pages %}
+            <li class="page-item">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Newsletter Subscription -->
+<div class="newsletter my-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <h3 class="mb-3">Stay Updated</h3>
+            <p class="text-white opacity-75 mb-4">Never miss our newest articles. Subscribe to receive updates delivered straight to your inbox.</p>
+        </div>
+        <div class="col-lg-6">
+            <form>
+                <div class="input-group mb-3">
+                    <input type="email" class="form-control" placeholder="Your email address">
+                    <button class="btn btn-light" type="submit">Subscribe</button>
+                </div>
+                <small class="text-white opacity-75">We'll never share your email with anyone else.</small>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

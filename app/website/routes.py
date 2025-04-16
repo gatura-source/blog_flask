@@ -44,7 +44,7 @@ def all(index):
     else:
         all_blog_posts = db.session.query(Blog_Posts).filter(
             Blog_Posts.admin_approved == True, Blog_Posts.date_to_post <= datetime.utcnow(),
-            ).order_by(desc(Blog_Posts.date_to_post)).limit(25)
+            ).order_by(desc(Blog_Posts.date_to_post)).limit(25).all()
     for post in all_blog_posts:
         if len(post.intro) > 300:
             cut_intro_if_too_long = f"{post.intro[:300]}..."

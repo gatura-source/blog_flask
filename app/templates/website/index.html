@@ -1,60 +1,140 @@
 {% extends "base.html" %}
 
 {% block meta %}
-<meta name="description" content="Pound of less - less is more">
+<meta name="description" content="Pound of less - A blog about minimalism and sustainable living">
 {% endblock %}
-{% block title %}Pound of Less - Less == More{% endblock %}
+
+{% block title %}Pound of Less - Where Less Equals More{% endblock %}
+
+{% block featured %}
+<!-- Featured Hero Section -->
+<div class="featured-post" style="background-image: url('/api/placeholder/1200/600');">
+    <div class="featured-overlay">
+        <span class="post-category">Featured</span>
+        <h1 class="display-4 fw-bold mb-2">Where Less is More</h1>
+        <p class="lead mb-3">Discover the art of living with less and finding more meaning in simplicity.</p>
+        <a href="{{ url_for('website.all', index=0) }}" class="btn btn-light px-4 py-2">Explore Articles</a>
+    </div>
+</div>
+{% endblock %}
 
 {% block content %}
+<!-- Theme Categories Section -->
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Explore Topics</h2>
+        <a href="{{ url_for('website.all', index=0) }}" class="text-decoration-none">View All <i class="fas fa-arrow-right ms-1"></i></a>
+    </div>
+    
+    <div class="row g-4">
+        {% for theme in themes %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <a class="text-decoration-none" href="{{ url_for('website.all', index=theme.id) }}">
+                <div class="card h-100 post-card">
+                    <img src="{{theme.picture_source}}" class="card-img-top post-img-top" alt="{{theme.theme}}" />
+                    <div class="card-body text-center">
+                        <h5 class="post-title mb-0">{{theme.theme}}</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
 
-<!-- Content -->
-    <!-- Main image -->
-    <section class="container-fluid HOME-img-main">
-        <p class="ALL-h1 HOME-sub-title"><span>Where Less is More</span></p>
-    </section>
-
-    <!-- Cards: Themes -->
-    <section class="container-fluid mt-4">
-        <div class="row justify-content-center">
-            {% for theme in themes %}
-            <div class="col col-auto mb-3 HOME-theme-btn">
-                <a class="ALL-no-hover" href="{{ url_for('website.all', index=theme.id) }}">
-                    <div class="card h-100" style="width: 13rem; border:none;">
-                        <img src="{{theme.picture_source}}" class="card-img-top HOME-round-img" alt="Theme" />
-                        <div class="card-body" style="display:flex; justify-content: center;">
-                            <h5 class="card-title ALL-no-hover">{{theme.theme}}</h5>
+<!-- Latest Articles by Theme -->
+{% for theme in all_posts.keys() %}
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">{{ theme }}</h2>
+        <a href="{{ url_for('website.all', index=loop.index0) }}" class="text-decoration-none">More in {{ theme }} <i class="fas fa-arrow-right ms-1"></i></a>
+    </div>
+    
+    <div class="row g-4">
+        {% for post in all_posts[theme] %}
+        <div class="col-md-6 col-lg-4">
+            <a class="text-decoration-none" href="{{ url_for('website.blog_post', index=post.id, _external=True) }}">
+                <div class="card h-100 post-card">
+                    <img src="{{post.picture_source}}" class="card-img-top post-img-top" alt="{{ post.picture_alt }}" />
+                    <div class="card-body">
+                        <span class="post-category">{{ theme }}</span>
+                        <h3 class="post-title">{{ post.title }}</h3>
+                        <div class="post-meta">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-circle me-1"></i>
+                                <span>{{ post.author.name }}</span>
+                            </div>
                         </div>
                     </div>
-                </a>
-            </div>
-            {% endfor %}
+                </div>
+            </a>
         </div>
-    </section>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
 
-    <!-- Cards: Theme --> 
-    
-    {% for theme in all_posts.keys() %}
-    <section class="container-fluid mt-4">
-        <div class="row justify-content-center">
-            {% for post in all_posts[theme] %}
-            <div class="col col-auto mb-3 HOME-theme-btn">
-                <a class="ALL-no-hover" href="{{ url_for('website.blog_post', index=post.id, _external=True) }}">
-                    <div class="card h-100 HOME-card ALL-post-hover" style="width: 18rem;">
-                        <img src="{{post.picture_source}}" class="card-img-top HOME-round-img fixed-size-img" alt="{{ post.picture_alt }}" />
-                        <div class="card-body">
-                            <h5 class="card-title ALL-no-hover">{{ post.title }}</h5>
-                        </div>
-                        <div class="card-footer HOME-card-footer">
-                            <small class="text-muted ALL-no-hover">by {{ post.author.name }}</small>
+<!-- Newsletter Subscription -->
+<div class="newsletter my-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <h3 class="mb-3">Join Our Community</h3>
+            <p class="text-white opacity-75 mb-4">Subscribe to receive our latest posts, exclusive content, and tips on minimalist living delivered straight to your inbox.</p>
+        </div>
+        <div class="col-lg-6">
+            <form>
+                <div class="input-group mb-3">
+                    <input type="email" class="form-control" placeholder="Your email address">
+                    <button class="btn btn-light" type="submit">Subscribe</button>
+                </div>
+                <small class="text-white opacity-75">We'll never share your email with anyone else.</small>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Posts Section -->
+<div class="mb-5">
+    <h2 class="mb-4">Editor's Picks</h2>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100 post-card">
+                <img src="/api/placeholder/600/350" class="card-img-top post-img-top" alt="Editor's Pick" style="height: 250px;">
+                <div class="card-body">
+                    <span class="post-category">Minimalism</span>
+                    <h3 class="post-title">The Art of Letting Go: A Beginner's Guide to Minimalism</h3>
+                    <p class="card-text text-muted">Discover how simplifying your possessions can lead to a more fulfilling and purpose-driven life.</p>
+                    <div class="post-meta mt-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                <span>April 12, 2024</span>
+                            </div>
+                            <a href="#" class="btn btn-sm btn-outline-primary">Read More</a>
                         </div>
                     </div>
-                </a>
+                </div>
             </div>
-            {% endfor %}
-            {% endfor %}
         </div>
-    </section>
-
-    
-
+        <div class="col-md-6">
+            <div class="card h-100 post-card">
+                <img src="/api/placeholder/600/350" class="card-img-top post-img-top" alt="Editor's Pick" style="height: 250px;">
+                <div class="card-body">
+                    <span class="post-category">Sustainability</span>
+                    <h3 class="post-title">10 Simple Steps Toward a Zero-Waste Lifestyle</h3>
+                    <p class="card-text text-muted">Small changes in daily habits can make a significant impact on reducing your environmental footprint.</p>
+                    <div class="post-meta mt-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                <span>April 8, 2024</span>
+                            </div>
+                            <a href="#" class="btn btn-sm btn-outline-primary">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

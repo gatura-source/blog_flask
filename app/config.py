@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv  # getting .env variables
 from datetime import timedelta
-from secrets import token_urlsafe()
+from secrets import token_urlsafe
 load_dotenv()
 base_path = os.path.abspath(os.getcwd())
 

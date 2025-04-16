@@ -1,49 +1,58 @@
 {% extends "base.html" %}
 
 {% block meta %}
-<meta name="description" content="less - Contact">
+<meta name="description" content="Pound of Less - Contact Us">
 {% endblock %}
-{% block title %}Contact Form{% endblock %}
+
+{% block title %}Contact Us{% endblock %}
 
 {% block content %}
-
 <!-- Content -->
-<h1 class="ALL-h1 text-center">Contact Us</h1>
+<h1 class="mb-4 text-center">Contact Us</h1>
 
-<section class="mb-3 container-fluid">
+<section class="mb-4 container-fluid">
     <div class="row justify-content-center">
-        <p class="col-lg-8 col-md-10 text-justify">Got any ideas, concearns or wishes? Share your thoughts!</p>
-    </div>
-</section>
-
-<section class="mb-3 container-fluid">
-    <div class="row justify-content-center">
-        <form class="col-lg-8 col-md-10" action="/contact" method="POST">
-            <div class="form-group">
-                <label for="contact_name">Name</label>
-                <input type="text" class="form-control" id="contact_name" name="contact_name" placeholder="John Doe" maxlength="200" required>
+        <div class="col-lg-10 col-md-12">
+            <p class="text-center text-muted mb-4">Got any ideas, concerns or wishes? Share your thoughts with us!</p>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form action="/contact" method="POST">
+                        <div class="mb-3">
+                            <label for="contact_name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="contact_name" name="contact_name" 
+                                placeholder="John Doe" maxlength="200" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact_email" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="contact_email" name="contact_email" 
+                                placeholder="name@example.com" maxlength="100" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact_subject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="contact_subject" name="contact_subject" 
+                                placeholder="What's this about?" maxlength="200">
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact_message" class="form-label">Message</label>
+                            <textarea class="form-control" id="contact_message" name="contact_message" 
+                                rows="5" maxlength="700" placeholder="Your message here..." required></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="contact_email">Email address</label>
-                <input type="email" class="form-control" id="contact_email" name="contact_email" placeholder="name@example.com" maxlength="100" required>
+            
+            {% if msg_sent == True %}
+            <div class="alert alert-success mt-4" role="alert">
+                <i class="fas fa-check-circle me-2"></i>Message sent successfully! Thank you for contacting us.
             </div>
-            <div class="form-group">
-                <label for="contact_message">Message</label>
-                <textarea class="form-control" id="contact_message" name="contact_message" rows="3" maxlength="700"></textarea>
-            </div>
-            <button type="submit" class="btn ALL-green-btn mb-2">Submit</button>
-        </form>
-    </div>
-</section>
-
-{% if msg_sent == True: %}
-<section class="mb-3 container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-lg-8 col-md-10">
-            <p class="ALL-msg-sent">Message sent! Thank you!</p>
+            {% endif %}
         </div>
     </div>
 </section>
-{% endif %}
-
 {% endblock %}

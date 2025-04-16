@@ -1,56 +1,90 @@
 {% extends "account/dashboard_admin.html" %}
 {% block page %}
 
-<h1 class="mb-3 text-center">Blog posts</h1>
-<h2 class="mb-3 text-center">All submitted posts</h2>
-<section class="mb-3 container-fluid">
-    <div class="table-responsive w-100">
-        <table class="col-md-12 table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col" class="align-middle"># id</th>
-                    <th scope="col" class="align-middle">Title</th>
-                    <th scope="col" class="align-middle">Theme</th>
-                    <th scope="col" class="align-middle">Date to post</th>
-                    <th scope="col" class="align-middle">Date submitted</th>
-                    <th scope="col" class="align-middle">Author</th>
-                    <th scope="col" class="align-middle">Admin Approved</th>
-                    <th scope="col" class="align-middle">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for post in all_blog_posts_submitted %}
-                <tr>
-                    <th scope="row" class="align-middle">{{post.id}}</th>
-                    <td class="align-middle">{{post.title}}</td>
-                    <td class="align-middle">{{post.theme_group.theme}}</td>
-                    <td class="align-middle">{{post.date_to_post.strftime('%d %b %Y')}}</td>
-                    <td class="align-middle">{{post.date_submitted.strftime('%d %b %Y')}}</td>
-                    <td class="align-middle">{{post.author.name}}</td>
-                    <td class="align-middle">{{post.admin_approved}}</td>
-                    <td class="d-flex flex-column" style="gap: 5px;">
-                        <div class="d-flex" style="gap: 5px;">
-                            <a href="{{url_for('dashboard.preview_post', id=post.id)}}" target="_blank" class="btn btn-sm ALL-mini-btn"
-                                style="width: 70px; background-color: #728c6996;">preview</a>
-                            {% if not post.admin_approved%}
-                            <a href="{{url_for('dashboard.approve_post', id=post.id)}}" class="btn btn-sm ALL-mini-btn"
-                                style="width: 70px; background-color: #728C69;">approve</a>
-                            {% else %}
-                            <a href="{{url_for('dashboard.disallow_post', id=post.id)}}" class="btn btn-sm ALL-mini-btn"
-                                style="width: 70px; background-color: #728c6952;">disallow</a>
-                            {% endif %}
-                        </div>
-                        <div class="d-flex" style="gap: 5px;">
-                            <a href="{{url_for('dashboard.edit_post', id=post.id)}}" class="btn btn-secondary btn-sm"
-                                style="width: 70px !important;">edit</a>
-                            <a href="{{url_for('dashboard.delete_post', id=post.id)}}" class="btn btn-danger btn-sm" style="width: 70px;">delete</a>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="card mb-4">
+    <div class="card-header bg-white py-3">
+        <h1 class="h3 mb-0">Blog Posts Management</h1>
     </div>
-</section>
+    <div class="card-body">
+        <p class="text-muted mb-4">Manage all submitted posts across the Pound of Less blog.</p>
+        
+        <div class="table-responsive">
+            <table class="table table-hover border-bottom">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="align-middle">#</th>
+                        <th scope="col" class="align-middle">Title</th>
+                        <th scope="col" class="align-middle">Theme</th>
+                        <th scope="col" class="align-middle">Publish Date</th>
+                        <th scope="col" class="align-middle">Submitted</th>
+                        <th scope="col" class="align-middle">Author</th>
+                        <th scope="col" class="align-middle">Status</th>
+                        <th scope="col" class="align-middle">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if all_blog_posts_submitted %}
+                    {% for post in all_blog_posts_submitted %}
+                    <tr>
+                        <th scope="row" class="align-middle">{{post.id}}</th>
+                        <td class="align-middle">{{post.title}}</td>
+                        <td class="align-middle">
+                            <span class="badge bg-primary">{{post.theme_group.theme}}</span>
+                        </td>
+                        <td class="align-middle">{{post.date_to_post.strftime('%d %b %Y')}}</td>
+                        <td class="align-middle">{{post.date_submitted.strftime('%d %b %Y')}}</td>
+                        <td class="align-middle">{{post.author.name}}</td>
+                        <td class="align-middle">
+                            {% if post.admin_approved %}
+                            <span class="badge bg-success">Approved</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td class="align-middle">
+                            <div class="btn-group">
+                                <a href="{{url_for('dashboard.preview_post', id=post.id)}}" target="_blank" 
+                                   class="btn btn-sm btn-outline-secondary" title="Preview">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                
+                                {% if not post.admin_approved %}
+                                <a href="{{url_for('dashboard.approve_post', id=post.id)}}" 
+                                   class="btn btn-sm btn-outline-success" title="Approve">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                {% else %}
+                                <a href="{{url_for('dashboard.disallow_post', id=post.id)}}" 
+                                   class="btn btn-sm btn-outline-warning" title="Disallow">
+                                    <i class="fas fa-ban"></i>
+                                </a>
+                                {% endif %}
+                                
+                                <a href="{{url_for('dashboard.edit_post', id=post.id)}}" 
+                                   class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                
+                                <a href="{{url_for('dashboard.delete_post', id=post.id)}}" 
+                                   class="btn btn-sm btn-outline-danger" title="Delete"
+                                   onclick="return confirm('Are you sure you want to delete this post?');">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+            <p>No blog posts have been submitted yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
 
 {% endblock %}
